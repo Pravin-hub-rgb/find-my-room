@@ -19,8 +19,11 @@ export default function Navbar() {
           Post a Room
         </Link>
 
-        <Link href="/login">
+        <Link href="/auth/login">
           <Button size="sm">Login</Button>
+        </Link>
+        <Link href="/auth/signup">
+          <Button variant="secondary" size="sm">Signup</Button>
         </Link>
       </div>
     </nav>
