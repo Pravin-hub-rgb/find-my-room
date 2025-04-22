@@ -5,17 +5,33 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from "@/components/ui/button"
-import type { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js'
 
 export default function Navbar() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<{ name: string; city: string }>({ name: '', city: '' })
   const router = useRouter()
 
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser()
-      if (data?.user) setUser(data.user)
-      else setUser(null)
+      if (data?.user) {
+        setUser(data.user)
+        // Fetch profile data when user is logged in
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('name, city')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profileData) {
+          setProfile(profileData)
+        } else {
+          console.error('Error fetching profile:', error?.message)
+        }
+      } else {
+        setUser(null)
+      }
     }
 
     getUser()
@@ -51,9 +67,21 @@ export default function Navbar() {
         </Link>
 
         {user ? (
-          <Button size="sm" variant="destructive" onClick={handleLogout}>
-            Logout
-          </Button>
+          <>
+            {/* Show Profile Name */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => router.push('/profile')} // Navigate to profile page
+            >
+              {profile?.name} {/* Use profile name, fallback to email name part */}
+            </Button>
+
+            {/* Logout Button */}
+            <Button size="sm" variant="destructive" onClick={handleLogout}>
+              Logout
+            </Button>
+          </>
         ) : (
           <>
             <Link href="/auth/login">

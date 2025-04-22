@@ -37,4 +37,3 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 
 ## Shadcn for style components
-## RPC - Remote Procedure Call for setting up the database
