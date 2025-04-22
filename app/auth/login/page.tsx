@@ -1,15 +1,30 @@
 'use client'
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
 
 const Login = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const toastShownRef = useRef(false); 
+
+  useEffect(() => {
+    const success = searchParams.get("success");
+
+    if (success === "signup" && !toastShownRef.current) {
+      toast.success("A confirmation email has been sent to your inbox. Please verify your email to continue.");
+      toastShownRef.current = true;
+
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("success");
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +35,7 @@ const Login = () => {
     if (error) {
       setError(error.message);
     } else {
-      router.push('/');
+      router.push('/?success=login');
     }
   };
 

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Button } from '@/components/ui/button'; // Import ShadCN Button
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const Signup = () => {
   const router = useRouter();
@@ -20,7 +21,7 @@ const Signup = () => {
     if (error) {
       setError(error.message);
     } else {
-      router.push('/auth/login');
+      router.push('/auth/login?success=signup');
     }
   };
 
@@ -52,6 +53,13 @@ const Signup = () => {
             Sign Up
           </Button>
         </form>
+        {/* Login link below the form */}
+        <p className="text-center text-sm mt-4">
+          Already a user?{' '}
+          <Link href="/auth/login" className="text-blue-600 hover:underline">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );
