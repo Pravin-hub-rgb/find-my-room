@@ -37,3 +37,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 
 ## Shadcn for style components
+## Supabase Storage Bucket for storing the images

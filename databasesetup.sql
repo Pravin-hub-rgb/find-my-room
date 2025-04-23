@@ -36,3 +36,25 @@ EXECUTE FUNCTION public.create_profile_after_email_confirmation();
 GRANT INSERT ON TABLE public.profiles TO authenticated;
 
 REVOKE EXECUTE ON FUNCTION public.create_profile_after_email_confirmation() FROM PUBLIC;
+
+
+
+-- Rooms table 
+
+CREATE TABLE rooms (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  description text,
+  room_type text,
+  price numeric,
+  state text NOT NULL,
+  district text NOT NULL,
+  locality text,
+  address text,
+  image_urls text[], -- array of image URLs from storage
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE rooms DROP COLUMN title;
+
