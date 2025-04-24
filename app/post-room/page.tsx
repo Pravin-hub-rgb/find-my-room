@@ -24,6 +24,7 @@ const PostRoomPage = () => {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     description: '',
     price: '',
@@ -44,21 +45,26 @@ const PostRoomPage = () => {
     setIsClient(true);
   }, []);
 
-  // Get the current logged-in user's ID
   useEffect(() => {
     const getUser = async () => {
       const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error("Error getting user:", error);
+
+      if (error || !data?.user) {
+        console.warn("User not authenticated:", error?.message);
+        router.push('/auth/login'); // Redirect to login if not logged in
         return;
       }
-      if (data?.user) {
-        setUserId(data.user.id);
-      }
+
+      // If user is authenticated
+      setUserId(data.user.id);
+      setLoading(false);
     };
 
     getUser();
-  }, []);
+  }, [router]);
+
+  if (loading) return <div>Checking authentication...</div>;
+
 
   // Handle image file changes
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
