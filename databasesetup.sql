@@ -58,3 +58,6 @@ CREATE TABLE rooms (
 
 ALTER TABLE rooms DROP COLUMN title;
 
+alter table rooms
+add column latitude double precision,
+add column longitude double precision;

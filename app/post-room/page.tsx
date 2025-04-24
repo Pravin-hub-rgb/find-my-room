@@ -33,8 +33,18 @@ const PostRoomPage = () => {
     district: '',
     locality: '',
     address: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
     images: [] as File[]
   });
+  const [formErrors, setFormErrors] = useState({
+    state: '',
+    district: '',
+    locality: '',
+    price: '',
+    images: '',
+  });
+
 
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,6 +119,21 @@ const PostRoomPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Basic validation
+    const errors = {
+      state: formData.state ? '' : 'State is required',
+      district: formData.district ? '' : 'District is required',
+      locality: formData.locality ? '' : 'Locality is required',
+      price: formData.price && parseFloat(formData.price) > 0 ? '' : 'Valid price required',
+      images: imageFiles.length > 0 ? '' : 'At least one image required',
+    };
+
+    setFormErrors(errors);
+
+    // If any error exists, return early
+    const hasErrors = Object.values(errors).some(err => err !== '');
+    if (hasErrors) return;
+
     if (!userId) {
       setSubmissionStatus("User not logged in");
       return;
@@ -167,8 +192,11 @@ const PostRoomPage = () => {
           district: formData.district,
           locality: formData.locality,
           address: formData.address,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
           image_urls: imageUrls,
-        },
+        }
+
       ]);
 
     if (insertError) {
@@ -189,22 +217,45 @@ const PostRoomPage = () => {
     return null;
   }
 
+  const fetchLatLng = async (state: string, district: string, locality: string) => {
+    const query = locality
+      ? `${locality}, ${district}, ${state}, India`
+      : `${district}, ${state}, India`;
+
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data?.length) {
+        const { lat, lon } = data[0];
+        return { lat: parseFloat(lat), lng: parseFloat(lon) };
+      }
+    } catch (err) {
+      console.error("Error fetching lat/lng:", err);
+    }
+    return null;
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold">Post a Room</h1>
       <form onSubmit={handleSubmit}>
+        {/* Description */}
         <Textarea
           placeholder="Description"
           value={formData.description}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
         />
 
+        {/* Price */}
         <Input
           type="number"
           placeholder="Price (₹)"
           value={formData.price}
           onChange={e => setFormData({ ...formData, price: e.target.value })}
         />
+        {formErrors.price && <p className="text-red-600">{formErrors.price}</p>}
 
         {/* Room Type */}
         <Select
@@ -220,7 +271,7 @@ const PostRoomPage = () => {
           </SelectContent>
         </Select>
 
-        {/* State Dropdown */}
+        {/* State */}
         <Select
           onValueChange={(value) => {
             setSelectedState(value)
@@ -238,8 +289,9 @@ const PostRoomPage = () => {
             ))}
           </SelectContent>
         </Select>
+        {formErrors.state && <p className="text-red-600">{formErrors.state}</p>}
 
-        {/* District Dropdown */}
+        {/* District */}
         <Select
           disabled={!selectedState}
           onValueChange={(value) => {
@@ -258,15 +310,33 @@ const PostRoomPage = () => {
             ))}
           </SelectContent>
         </Select>
+        {formErrors.district && <p className="text-red-600">{formErrors.district}</p>}
 
-        {/* Locality Input */}
+        {/* Locality */}
         <Input
           placeholder="Locality"
           value={formData.locality}
           onChange={e => setFormData({ ...formData, locality: e.target.value })}
-        />
+          onBlur={async () => {
+            if (formData.state && formData.district) {
+              const queryLocality = formData.locality
+                ? `${formData.locality}, ${formData.district}, ${formData.state}`
+                : `${formData.district}, ${formData.state}`;
 
-        {/* Address Input */}
+              const result = await fetchLatLng(formData.state, formData.district, formData.locality);
+              if (result) {
+                setFormData(prev => ({
+                  ...prev,
+                  latitude: result.lat,
+                  longitude: result.lng,
+                }));
+              }
+            }
+          }}
+        />
+        {formErrors.locality && <p className="text-red-600">{formErrors.locality}</p>}
+
+        {/* Address (optional) */}
         <Input
           placeholder="Address (optional)"
           value={formData.address}
@@ -284,7 +354,7 @@ const PostRoomPage = () => {
             onChange={handleFileChange}
             className="mt-2"
           />
-          {error && <p className="text-red-600">{error}</p>}
+          {formErrors.images && <p className="text-red-600">{formErrors.images}</p>}
         </div>
 
         {/* Image Previews */}
@@ -300,9 +370,10 @@ const PostRoomPage = () => {
           ))}
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <Button>Post</Button>
       </form>
+
     </div>
   );
 }

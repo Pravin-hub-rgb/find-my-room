@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
+import RoomMap from '@/components/RoomMap';
 
 const HomePage = () => {
   const searchParams = useSearchParams();
@@ -27,7 +28,12 @@ const HomePage = () => {
 
   return (
     <div>
-      {/* Your homepage content */}
+        <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Room Locations</h2>
+        <div className="rounded-lg overflow-hidden border border-gray-200">
+          <RoomMap />
+        </div>
+      </section>
     </div>
   );
 };
