@@ -36,7 +36,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
   const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    title: '',
     description: '',
     price: '',
     roomType: '',
@@ -95,7 +94,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         
         // Initialize form data with room data
         setFormData({
-          title: roomData.title || '',
           description: roomData.description || '',
           price: roomData.price?.toString() || '',
           roomType: roomData.room_type || '',
@@ -499,5 +497,3 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     </div>
   );
 }
-
-// Now create a separate file for the actual page component

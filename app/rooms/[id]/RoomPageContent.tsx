@@ -1,18 +1,21 @@
 // app/rooms/[id]/RoomPageContent.tsx
 'use client';
-
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import MapWrapper from '@/components/MapWrapper';
-import { PencilIcon } from 'lucide-react';
+import { PencilIcon, TrashIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function RoomPageContent({ room, id }: { room: any, id: string }) {
   const [isOwner, setIsOwner] = useState(false);
-  
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const router = useRouter();
+
   useEffect(() => {
     async function checkOwnership() {
       // Get current logged in user
@@ -20,25 +23,101 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
       // Check if current user is the owner of the room
       setIsOwner(data.user?.id === room.user_id);
     }
-    
     checkOwnership();
   }, [room.user_id]);
 
+  const handleDeleteClick = () => {
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirmation(false);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Make the request with the token
+      const response = await fetch(`/api/rooms/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete room');
+      }
+      
+      // Redirect to rooms listing
+      router.push('/rooms');
+      router.refresh();
+      
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      alert('Failed to delete room: ' + (error as Error).message);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirmation(false);
+    }
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
-      {/* Header with title and edit button */}
+      {/* Header with edit button */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{room.title || "Room Details"}</h1>
+        <h1 className="text-2xl font-bold">Room Details</h1>
         {isOwner && (
-          <Link href={`/rooms/${id}/edit`}>
-            <Button variant="outline" className="flex items-center gap-2">
-              <PencilIcon size={16} />
-              Edit Room
+          <div className="flex gap-2">
+            <Link href={`/rooms/${id}/edit`}>
+              <Button variant="outline" className="flex items-center gap-2">
+                <PencilIcon size={16} />
+                Edit Room
+              </Button>
+            </Link>
+            <Button 
+              variant="destructive" 
+              className="flex items-center gap-2"
+              onClick={handleDeleteClick}
+            >
+              <TrashIcon size={16} />
+              Delete Room
             </Button>
-          </Link>
+          </div>
         )}
       </div>
-      
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-md shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Delete Room</h3>
+            <p className="mb-6">Are you sure you want to delete this room? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={handleDeleteCancel}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Carousel */}
       {Array.isArray(room.image_urls) && room.image_urls.length > 0 && (
         <div className="relative w-full">
@@ -70,7 +149,8 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
           <div>
             <p><strong>Room Type:</strong> {room.room_type}</p>
             <p><strong>Price:</strong> ₹{room.price}</p>
-            <p><strong>Available At:</strong> {room.locality}, {room.district}, {room.state}</p>
+            <p><strong>Location:</strong> {room.locality}, {room.district}, {room.state}</p>
+            {room.address && <p><strong>Address:</strong> {room.address}</p>}
           </div>
           <div>
             <p><strong>Posted on:</strong> {new Date(room.created_at).toLocaleDateString()}</p>
