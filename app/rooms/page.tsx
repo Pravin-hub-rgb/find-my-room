@@ -6,6 +6,7 @@ import { statesAndDistricts } from '@/lib/statesAndDistricts';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function RoomsPage() {
     const [selectedState, setSelectedState] = useState('');
@@ -127,6 +128,11 @@ export default function RoomsPage() {
                             <p>Post at: {new Date(room.created_at).toLocaleDateString()}</p>
                             <p>Posted by: {room.profiles?.name || 'Unknown User'}</p>
                         </div>
+                        <Button asChild className="mt-4 w-full">
+                            <Link href={`/rooms/${room.id}`}>
+                                Show More Details
+                            </Link>
+                        </Button>
                     </div>
                 ))}
             </div>

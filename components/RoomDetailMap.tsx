@@ -35,7 +35,7 @@ export default function RoomDetailMap({ room }: RoomDetailMapProps) {
     <MapContainer
       center={[room.latitude, room.longitude]}
       zoom={15}
-      style={{ height: '400px', width: '100%' }}
+      style={{ height: '400px', width: '70%' }}
       scrollWheelZoom={true}
     >
       <TileLayer
