@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import RoomMap from '@/components/RoomMap';
+import RecentRooms from '@/components/RecentRooms';
 
 const HomePage = () => {
   const searchParams = useSearchParams();
@@ -33,6 +34,7 @@ const HomePage = () => {
         <div className="rounded-lg overflow-hidden border border-gray-200">
           <RoomMap />
         </div>
+        <RecentRooms />
       </section>
     </div>
   );
