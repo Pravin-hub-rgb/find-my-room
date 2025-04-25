@@ -24,8 +24,7 @@ BEGIN
 END;
 $$;
 
-
--- Create the trigger to call the above function when email is confirmed
+-- Trigger ko banana joj function ko call karega jab email confirm hojayegi
 CREATE TRIGGER on_email_confirmation
 AFTER UPDATE OF email_confirmed_at ON auth.users
 FOR EACH ROW

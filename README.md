@@ -38,3 +38,44 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Shadcn for style components
 ## Supabase Storage Bucket for storing the images
+
+🌟 2. Review & Rating System
+
+Let logged-in users leave:
+
+    ⭐ 1–5 stars
+
+    📝 Comment Show:
+
+    Avg. rating on room card
+
+    Full list of reviews on detail page Needed:
+
+    reviews table with room_id, user_id, rating, comment, created_at
+
+    UI to submit & display reviews
+
+👤 3. User Profile Page
+
+Show public user info:
+
+    Name, profile pic, bio (if added)
+
+    Rooms posted
+
+    Reviews given/received Needed:
+
+    /users/[id] page
+
+    Maybe extend profiles table to store name, city, bio, image
+
+🔍 4. Advanced Search & Filters
+
+Make it easier for users to find rooms:
+
+    Filter by price range, room type, rating, etc.
+
+    Search by keywords (title, locality)
+
+    Sort by latest, cheapest, highest rated, etc.
+
