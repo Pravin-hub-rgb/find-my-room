@@ -113,6 +113,19 @@ const PostRoomPage = () => {
     }
   }
 
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files) {
+      setImageFiles(Array.from(files));
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+  };
+
+
   // Fetch districts based on the selected state
   const districts = statesAndDistricts.find(s => s.state === selectedState)?.districts || []
 
@@ -238,143 +251,184 @@ const PostRoomPage = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-4">
-      <h1 className="text-2xl font-bold">Post a Room</h1>
-      <form onSubmit={handleSubmit}>
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow space-y-6">
+      <h1 className="text-3xl font-semibold text-gray-800">Post a Room</h1>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+
         {/* Description */}
-        <Textarea
-          placeholder="Description"
-          value={formData.description}
-          onChange={e => setFormData({ ...formData, description: e.target.value })}
-        />
+        <div>
+          <label className="block mb-1 font-medium text-gray-700">Description</label>
+          <Textarea
+            placeholder="Describe your room..."
+            value={formData.description}
+            onChange={e => setFormData({ ...formData, description: e.target.value })}
+          />
+        </div>
 
         {/* Price */}
-        <Input
-          type="number"
-          placeholder="Price (₹)"
-          value={formData.price}
-          onChange={e => setFormData({ ...formData, price: e.target.value })}
-        />
-        {formErrors.price && <p className="text-red-600">{formErrors.price}</p>}
+        <div>
+          <label className="block mb-1 font-medium text-gray-700">Price (₹)</label>
+          <Input
+            type="number"
+            placeholder="e.g. 5000"
+            value={formData.price}
+            onChange={e => setFormData({ ...formData, price: e.target.value })}
+          />
+          {formErrors.price && <p className="text-red-600 text-sm mt-1">{formErrors.price}</p>}
+        </div>
 
         {/* Room Type */}
-        <Select
-          onValueChange={value => setFormData({ ...formData, roomType: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Room Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Private">Private</SelectItem>
-            <SelectItem value="Shared">Shared</SelectItem>
-            <SelectItem value="PG">PG</SelectItem>
-          </SelectContent>
-        </Select>
+        <div>
+          <label className="block mb-1 font-medium text-gray-700">Room Type</label>
+          <Select onValueChange={value => setFormData({ ...formData, roomType: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Room Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Private">Private</SelectItem>
+              <SelectItem value="Shared">Shared</SelectItem>
+              <SelectItem value="PG">PG</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* State */}
-        <Select
-          onValueChange={(value) => {
-            setSelectedState(value)
-            setFormData(prev => ({ ...prev, state: value, district: '' }))
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select State" />
-          </SelectTrigger>
-          <SelectContent>
-            {statesAndDistricts.map(stateObj => (
-              <SelectItem key={stateObj.state} value={stateObj.state}>
-                {stateObj.state}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {formErrors.state && <p className="text-red-600">{formErrors.state}</p>}
+        {/* State and District */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">State</label>
+            <Select
+              onValueChange={value => {
+                setSelectedState(value)
+                setFormData(prev => ({ ...prev, state: value, district: '' }))
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select State" />
+              </SelectTrigger>
+              <SelectContent>
+                {statesAndDistricts.map(stateObj => (
+                  <SelectItem key={stateObj.state} value={stateObj.state}>
+                    {stateObj.state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formErrors.state && <p className="text-red-600 text-sm mt-1">{formErrors.state}</p>}
+          </div>
 
-        {/* District */}
-        <Select
-          disabled={!selectedState}
-          onValueChange={(value) => {
-            setSelectedDistrict(value)
-            setFormData(prev => ({ ...prev, district: value }))
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select District" />
-          </SelectTrigger>
-          <SelectContent>
-            {districts.map(d => (
-              <SelectItem key={d} value={d}>
-                {d}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {formErrors.district && <p className="text-red-600">{formErrors.district}</p>}
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">District</label>
+            <Select
+              disabled={!selectedState}
+              onValueChange={(value) => {
+                setSelectedDistrict(value)
+                setFormData(prev => ({ ...prev, district: value }))
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select District" />
+              </SelectTrigger>
+              <SelectContent>
+                {districts.map(d => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formErrors.district && <p className="text-red-600 text-sm mt-1">{formErrors.district}</p>}
+          </div>
+        </div>
 
         {/* Locality */}
-        <Input
-          placeholder="Locality"
-          value={formData.locality}
-          onChange={e => setFormData({ ...formData, locality: e.target.value })}
-          onBlur={async () => {
-            if (formData.state && formData.district) {
-              const queryLocality = formData.locality
-                ? `${formData.locality}, ${formData.district}, ${formData.state}`
-                : `${formData.district}, ${formData.state}`;
-
-              const result = await fetchLatLng(formData.state, formData.district, formData.locality);
-              if (result) {
-                setFormData(prev => ({
-                  ...prev,
-                  latitude: result.lat,
-                  longitude: result.lng,
-                }));
-              }
-            }
-          }}
-        />
-        {formErrors.locality && <p className="text-red-600">{formErrors.locality}</p>}
-
-        {/* Address (optional) */}
-        <Input
-          placeholder="Address (optional)"
-          value={formData.address}
-          onChange={e => setFormData({ ...formData, address: e.target.value })}
-        />
-
-        {/* Image Upload */}
         <div>
-          <label htmlFor="image-upload" className="block">Upload Images:</label>
+          <label className="block mb-1 font-medium text-gray-700">Locality</label>
+          <Input
+            placeholder="e.g. Andheri West"
+            value={formData.locality}
+            onChange={e => setFormData({ ...formData, locality: e.target.value })}
+            onBlur={async () => {
+              if (formData.state && formData.district) {
+                const result = await fetchLatLng(formData.state, formData.district, formData.locality);
+                if (result) {
+                  setFormData(prev => ({
+                    ...prev,
+                    latitude: result.lat,
+                    longitude: result.lng,
+                  }));
+                }
+              }
+            }}
+          />
+          {formErrors.locality && <p className="text-red-600 text-sm mt-1">{formErrors.locality}</p>}
+        </div>
+
+        {/* Optional Address */}
+        <div>
+          <label className="block mb-1 font-medium text-gray-700">Address (optional)</label>
+          <Input
+            placeholder="e.g. 123, XYZ Apartment"
+            value={formData.address}
+            onChange={e => setFormData({ ...formData, address: e.target.value })}
+          />
+        </div>
+
+        <div>
+          {/* Image Upload */}
+          <label className="block font-medium text-gray-700 mb-1">Upload Images</label>
+
+          <label
+            htmlFor="image-upload"
+            className="flex items-center justify-center h-32 border-2 border-dashed border-gray-400 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          >
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Click to upload or drag & drop images here</p>
+              <p className="text-xs text-gray-400">Only image files are supported</p>
+            </div>
+          </label>
+
           <input
-            type="file"
             id="image-upload"
+            type="file"
             accept="image/*"
             multiple
             onChange={handleFileChange}
-            className="mt-2"
+            className="hidden"
           />
-          {formErrors.images && <p className="text-red-600">{formErrors.images}</p>}
+
+          {formErrors.images && <p className="text-red-600 text-sm mt-1">{formErrors.images}</p>}
+
+          {/* Image Previews */}
+          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3">
+            {imageFiles.length > 0 && imageFiles.map((file, index) => (
+              <div key={index} className="relative aspect-square">
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={`Preview ${index + 1}`}
+                  className="object-cover w-full h-full rounded-md"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newFiles = imageFiles.filter((_, i) => i !== index);
+                    setImageFiles(newFiles);
+                  }}
+                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full text-xs px-2 py-1 hover:bg-red-700"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+
         </div>
 
-        {/* Image Previews */}
-        <div className="image-previews">
-          {imageFiles.length > 0 && imageFiles.map((file, index) => (
-            <div key={index} className="preview">
-              <img
-                src={URL.createObjectURL(file)}
-                alt={`Preview ${index + 1}`}
-                className="h-32 w-32 object-cover"
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Submit */}
-        <Button>Post</Button>
+        {/* Submit Button */}
+        <Button className="w-full sm:w-auto">Post Room</Button>
       </form>
-
     </div>
+
   );
 }
 
