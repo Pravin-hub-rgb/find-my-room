@@ -60,3 +60,11 @@ ALTER TABLE rooms DROP COLUMN title;
 alter table rooms
 add column latitude double precision,
 add column longitude double precision;
+
+
+alter table profiles
+drop column city;
+
+alter table profiles
+add column state text,
+add column district text;

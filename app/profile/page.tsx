@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
@@ -6,14 +7,13 @@ import { Button } from '@/components/ui/button';
 
 const Profile = () => {
     const router = useRouter();
-    const [profile, setProfile] = useState({ name: '', city: '' });
+    const [profile, setProfile] = useState({ name: '', state: '', district: '' });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                // Fetch user session (authenticated user) using the current API
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
 
                 if (userError || !user) {
@@ -23,10 +23,9 @@ const Profile = () => {
                     return;
                 }
 
-                // Fetch profile data from the profiles table using the user ID
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('name, city')
+                    .select('name, state, district')
                     .eq('id', user.id)
                     .single();
 
@@ -37,8 +36,7 @@ const Profile = () => {
                     return;
                 }
 
-                // Set profile data in state
-                setProfile(data || { name: '', city: '' });
+                setProfile(data || { name: '', state: '', district: '' });
                 setLoading(false);
             } catch (err: any) {
                 console.error('Error fetching profile:', err.message);
@@ -68,7 +66,11 @@ const Profile = () => {
                 </div>
 
                 <div className="mb-4">
-                    <p className="text-lg font-medium">City: <span className="text-gray-600">{profile.city}</span></p>
+                    <p className="text-lg font-medium">State: <span className="text-gray-600">{profile.state || 'Not set'}</span></p>
+                </div>
+
+                <div className="mb-4">
+                    <p className="text-lg font-medium">District: <span className="text-gray-600">{profile.district || 'Not set'}</span></p>
                 </div>
 
                 <Button
@@ -79,7 +81,6 @@ const Profile = () => {
                 </Button>
             </div>
         </div>
-
     );
 };
 

@@ -9,7 +9,11 @@ import type { User } from '@supabase/supabase-js'
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<{ name: string; city: string }>({ name: '', city: '' })
+  const [profile, setProfile] = useState<{ name: string; state: string; district: string }>({
+    name: '',
+    state: '',
+    district: '',
+  })
   const router = useRouter()
 
   useEffect(() => {
@@ -17,10 +21,11 @@ export default function Navbar() {
       const { data } = await supabase.auth.getUser()
       if (data?.user) {
         setUser(data.user)
-        // Fetch profile data when user is logged in
+
+        // Fetch updated profile fields: name, state, district
         const { data: profileData, error } = await supabase
           .from('profiles')
-          .select('name, city')
+          .select('name, state, district')
           .eq('id', data.user.id)
           .single()
 
@@ -72,9 +77,9 @@ export default function Navbar() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => router.push('/profile')} // Navigate to profile page
+              onClick={() => router.push('/profile')}
             >
-              {profile?.name} {/* Use profile name, fallback to email name part */}
+              {profile?.name || user.email?.split('@')[0]}
             </Button>
 
             {/* Logout Button */}
