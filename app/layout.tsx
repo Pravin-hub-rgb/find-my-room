@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/navbar";
 import { Toaster } from "sonner";
 import 'leaflet/dist/leaflet.css';
+import Footer from "@/components/Footer";
 
 
 const geistSans = Geist({
@@ -29,11 +30,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen flex-col`}
       >
         <Navbar />
-        {children}
+
+        {/* Make main grow and push footer down */}
+        <main className="flex-1">
+          {children}
+        </main>
+
         <Toaster richColors position="top-center" />
+        <Footer />
       </body>
     </html>
   );

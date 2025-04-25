@@ -30,7 +30,7 @@ const HomePage = () => {
   return (
     <div>
         <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Room Locations</h2>
+        <h2 className="text-xl font-semibold mb-1 text-center">Room Locations</h2>
         <div className="rounded-lg overflow-hidden border border-gray-200">
           <RoomMap />
         </div>
