@@ -68,3 +68,6 @@ drop column city;
 alter table profiles
 add column state text,
 add column district text;
+
+alter table rooms add column bhk_type text;
+ALTER TABLE rooms DROP COLUMN room_type;

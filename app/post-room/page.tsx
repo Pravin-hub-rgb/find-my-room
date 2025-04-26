@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation' // Change this import to next/navigation
 
+
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ const PostRoomPage = () => {
     description: '',
     price: '',
     roomType: '',
+    bhkType: '',
     state: '',
     district: '',
     locality: '',
@@ -45,6 +47,14 @@ const PostRoomPage = () => {
     images: '',
   });
 
+  const bhkTypes = [
+    "1 RK",
+    "1 BHK",
+    "2 BHK",
+    "3 BHK",
+    "Studio",
+    "Other"
+  ];
 
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -200,6 +210,7 @@ const PostRoomPage = () => {
           user_id: userId,
           description: formData.description,
           room_type: formData.roomType,
+          bhk_type: formData.roomType === "PG" ? null : formData.bhkType,
           price: formData.price,
           state: formData.state,
           district: formData.district,
@@ -278,19 +289,45 @@ const PostRoomPage = () => {
           {formErrors.price && <p className="text-red-600 text-sm mt-1">{formErrors.price}</p>}
         </div>
 
-        {/* Room Type */}
-        <div>
-          <label className="block mb-1 font-medium text-gray-700">Room Type</label>
-          <Select onValueChange={value => setFormData({ ...formData, roomType: value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Room Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Private">Private</SelectItem>
-              <SelectItem value="Shared">Shared</SelectItem>
-              <SelectItem value="PG">PG</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Room Type and BHK Type in one row */}
+        <div className="mb-4 flex flex-col sm:flex-row gap-4">
+          {/* Room Type */}
+          <div className="w-full sm:w-1/2">
+            <label className="block mb-1 font-medium text-sm text-gray-700">Room Type</label>
+            <select
+              value={formData.roomType}
+              onChange={(e) =>
+                setFormData({ ...formData, roomType: e.target.value, bhkType: '' })
+              }
+              className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">-- Select Room Type --</option>
+              <option value="Private">Private</option>
+              <option value="Shared">Shared</option>
+              <option value="PG">PG</option>
+            </select>
+          </div>
+
+          {/* BHK Type – only if not PG */}
+          {formData.roomType !== 'PG' && (
+            <div className="w-full sm:w-1/2">
+              <label className="block mb-1 font-medium text-sm text-gray-700">BHK Type</label>
+              <select
+                value={formData.bhkType}
+                onChange={(e) =>
+                  setFormData({ ...formData, bhkType: e.target.value })
+                }
+                className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- Select BHK Type --</option>
+                {bhkTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* State and District */}

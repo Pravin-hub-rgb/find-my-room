@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import Image from 'next/image'
 import {
   Select,
   SelectContent,
@@ -20,6 +19,21 @@ interface EditPageProps {
   roomId: string;
 }
 
+// Room update data interface
+interface RoomUpdateData {
+  description: string;
+  room_type: string;
+  price: string;
+  state: string;
+  district: string;
+  locality: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  image_urls: string[];
+  bhk_type?: string | null;  // Make bhk_type optional
+}
+
 // This is the exported client component that will be used by the server page component
 export function EditRoomForm({ roomId }: EditPageProps) {
   const router = useRouter();
@@ -27,6 +41,9 @@ export function EditRoomForm({ roomId }: EditPageProps) {
   const [room, setRoom] = useState<any>(null);
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
+  // Add explicit state variables for room type and bhk type
+  const [selectedRoomType, setSelectedRoomType] = useState<string>('');
+  const [selectedBhkType, setSelectedBhkType] = useState<string>('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
@@ -34,38 +51,37 @@ export function EditRoomForm({ roomId }: EditPageProps) {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState({
     description: '',
     price: '',
-    roomType: '',
+    roomType: '', // This corresponds to room_type in the database
     state: '',
     district: '',
     locality: '',
     address: '',
     latitude: null as number | null,
     longitude: null as number | null,
+    bhkType: '' // This corresponds to bhk_type in the database
   });
-  
+
   const [formErrors, setFormErrors] = useState({
     state: '',
     district: '',
     locality: '',
     price: '',
-    images: '',
+    images: ''
   });
 
   useEffect(() => {
     const loadData = async () => {
       // Check authentication
       const { data: userData, error: authError } = await supabase.auth.getUser();
-
       if (authError || !userData?.user) {
         console.warn("User not authenticated:", authError?.message);
-        router.push('/auth/login'); 
+        router.push('/auth/login');
         return;
       }
-
       setUserId(userData.user.id);
       
       // Fetch room data
@@ -75,7 +91,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           .select('*')
           .eq('id', roomId)
           .single();
-        
+          
         if (roomError || !roomData) {
           setError("Room not found");
           setLoading(false);
@@ -92,22 +108,38 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         // Set the room data
         setRoom(roomData);
         
+        // Debug logs - Add these to see exact values from database
+        console.log("Fetched room data:", roomData);
+        console.log("Room type from DB:", roomData.room_type);
+        console.log("BHK type from DB:", roomData.bhk_type);
+        
+        // Map the values from database to match exactly the values in your Select components
+        // This is the key fix - ensuring the values match exactly what's in your SelectItem values
+        let mappedRoomType = roomData.room_type || '';
+        let mappedBhkType = roomData.bhk_type || '';
+        
+        // Make sure these values exactly match your SelectItem values
+        console.log("Setting room type to:", mappedRoomType);
+        console.log("Setting BHK type to:", mappedBhkType);
+        
+        setSelectedRoomType(mappedRoomType);
+        setSelectedBhkType(mappedBhkType);
+        setSelectedState(roomData.state || '');
+        setSelectedDistrict(roomData.district || '');
+        
         // Initialize form data with room data
         setFormData({
           description: roomData.description || '',
           price: roomData.price?.toString() || '',
-          roomType: roomData.room_type || '',
+          roomType: mappedRoomType,
           state: roomData.state || '',
           district: roomData.district || '',
           locality: roomData.locality || '',
           address: roomData.address || '',
           latitude: roomData.latitude || null,
           longitude: roomData.longitude || null,
+          bhkType: mappedBhkType
         });
-        
-        // Set states for select dropdowns
-        setSelectedState(roomData.state || '');
-        setSelectedDistrict(roomData.district || '');
         
         // Set existing images
         if (Array.isArray(roomData.image_urls)) {
@@ -121,7 +153,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         setLoading(false);
       }
     };
-
+    
     loadData();
   }, [roomId, router]);
 
@@ -195,7 +227,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
       district: formData.district ? '' : 'District is required',
       locality: formData.locality ? '' : 'Locality is required',
       price: formData.price && parseFloat(formData.price) > 0 ? '' : 'Valid price required',
-      images: (existingImages.length - imagesToRemove.length > 0) || imageFiles.length > 0 ? '' : 'At least one image required',
+      images: (existingImages.length - imagesToRemove.length > 0) || imageFiles.length > 0 ? '' : 'At least one image required'
     };
 
     setFormErrors(errors);
@@ -248,20 +280,29 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     ];
 
     // Step 3: Update room data in the database
+    const updateData: RoomUpdateData = {
+      description: formData.description,
+      room_type: selectedRoomType, // Use the explicit state variable
+      price: formData.price,
+      state: formData.state,
+      district: formData.district,
+      locality: formData.locality,
+      address: formData.address,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      image_urls: finalImageUrls,
+    };
+    
+    // Only include bhk_type when not PG
+    if (selectedRoomType !== 'PG') {
+      updateData.bhk_type = selectedBhkType; // Use the explicit state variable
+    } else {
+      updateData.bhk_type = null;
+    }
+
     const { error: updateError } = await supabase
       .from('rooms')
-      .update({
-        description: formData.description,
-        room_type: formData.roomType,
-        price: formData.price,
-        state: formData.state,
-        district: formData.district,
-        locality: formData.locality,
-        address: formData.address,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        image_urls: finalImageUrls,
-      })
+      .update(updateData)
       .eq('id', roomId);
 
     if (updateError) {
@@ -272,23 +313,28 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     }
 
     setSubmissionStatus("Room updated successfully!");
-    
+
     // Redirect to the room page after a brief delay
     setTimeout(() => {
       router.push(`/rooms/${roomId}`);
     }, 1500);
   };
 
+  // For debugging - remove in production
+  console.log("Current form data:", formData);
+  console.log("Selected room type:", selectedRoomType);
+  console.log("Selected BHK type:", selectedBhkType);
+
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold">Edit Room</h1>
-      
+
       {submissionStatus && (
         <div className={`p-3 rounded ${submissionStatus.includes("Error") ? "bg-red-100" : "bg-green-100"}`}>
           {submissionStatus}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Description */}
         <div>
@@ -316,27 +362,61 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         <div>
           <label className="block mb-1">Room Type</label>
           <Select
-            value={formData.roomType}
-            onValueChange={value => setFormData({ ...formData, roomType: value })}
+            value={selectedRoomType}
+            onValueChange={(value) => {
+              console.log("Changing room type to:", value);
+              setSelectedRoomType(value);
+              // Reset BHK type if PG is selected
+              if (value === 'PG') {
+                setSelectedBhkType('');
+              }
+              setFormData({ ...formData, roomType: value });
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Room Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Private">Private</SelectItem>
-              <SelectItem value="Shared">Shared</SelectItem>
               <SelectItem value="PG">PG</SelectItem>
+              <SelectItem value="Private">Private</SelectItem> 
+              <SelectItem value="Shared">Shared</SelectItem> 
             </SelectContent>
           </Select>
         </div>
+
+        {/* BHK Type Field, shown only if roomType is not 'PG' */}
+        {selectedRoomType && selectedRoomType !== 'PG' && (
+          <div>
+            <label className="block mb-1">BHK Type</label>
+            <Select
+              value={selectedBhkType}
+              onValueChange={(value) => {
+                console.log("Changing BHK type to:", value);
+                setSelectedBhkType(value);
+                setFormData({ ...formData, bhkType: value });
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select BHK Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1 BHK">1 BHK</SelectItem> 
+                <SelectItem value="2 BHK">2 BHK</SelectItem> 
+                <SelectItem value="3 BHK">3 BHK</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* State */}
         <div>
           <label className="block mb-1">State</label>
           <Select
-            value={formData.state}
+            value={selectedState}
             onValueChange={(value) => {
               setSelectedState(value);
+              setSelectedDistrict('');
               setFormData(prev => ({ ...prev, state: value, district: '' }));
             }}
           >
@@ -358,7 +438,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         <div>
           <label className="block mb-1">District</label>
           <Select
-            value={formData.district}
+            value={selectedDistrict}
             disabled={!selectedState}
             onValueChange={(value) => {
               setSelectedDistrict(value);
@@ -429,9 +509,8 @@ export function EditRoomForm({ roomId }: EditPageProps) {
                   <button
                     type="button"
                     onClick={() => toggleImageRemoval(url)}
-                    className={`absolute top-2 right-2 p-1 rounded-full ${
-                      imagesToRemove.includes(url) ? 'bg-green-500' : 'bg-red-500'
-                    } text-white text-xs`}
+                    className={`absolute top-2 right-2 p-1 rounded-full ${imagesToRemove.includes(url) ? 'bg-green-500' : 'bg-red-500'
+                      } text-white text-xs`}
                   >
                     {imagesToRemove.includes(url) ? 'Keep' : 'Remove'}
                   </button>
@@ -471,7 +550,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
             </div>
           </div>
         )}
-        
+
         {formErrors.images && <p className="text-red-600">{formErrors.images}</p>}
 
         {/* Submit Buttons */}
@@ -483,7 +562,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           >
             {isSubmitting ? 'Updating...' : 'Update Room'}
           </Button>
-          
+
           <Button
             type="button"
             variant="outline"
