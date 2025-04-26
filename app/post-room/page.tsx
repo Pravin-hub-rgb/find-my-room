@@ -5,8 +5,7 @@ import { statesAndDistricts } from '@/lib/statesAndDistricts'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation' // Change this import to next/navigation
-
+import { useRouter } from 'next/navigation'
 
 import {
   Select,
@@ -18,7 +17,7 @@ import {
 import { supabase } from '@/lib/supabaseClient'
 
 const PostRoomPage = () => {
-  const router = useRouter(); // Call hook at the top level
+  const router = useRouter();
 
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedState, setSelectedState] = useState('');
@@ -29,7 +28,6 @@ const PostRoomPage = () => {
   const [formData, setFormData] = useState({
     description: '',
     price: '',
-    roomType: '',
     bhkType: '',
     state: '',
     district: '',
@@ -44,15 +42,16 @@ const PostRoomPage = () => {
     district: '',
     locality: '',
     price: '',
+    bhkType: '',
     images: '',
   });
 
   const bhkTypes = [
     "1 RK",
+    "Studio",
     "1 BHK",
     "2 BHK",
     "3 BHK",
-    "Studio",
     "Other"
   ];
 
@@ -84,7 +83,6 @@ const PostRoomPage = () => {
   }, [router]);
 
   if (loading) return <div>Checking authentication...</div>;
-
 
   // Handle image file changes
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +133,6 @@ const PostRoomPage = () => {
     e.preventDefault();
   };
 
-
   // Fetch districts based on the selected state
   const districts = statesAndDistricts.find(s => s.state === selectedState)?.districts || []
 
@@ -148,6 +145,7 @@ const PostRoomPage = () => {
       district: formData.district ? '' : 'District is required',
       locality: formData.locality ? '' : 'Locality is required',
       price: formData.price && parseFloat(formData.price) > 0 ? '' : 'Valid price required',
+      bhkType: formData.bhkType ? '' : 'BHK type is required',
       images: imageFiles.length > 0 ? '' : 'At least one image required',
     };
 
@@ -177,7 +175,7 @@ const PostRoomPage = () => {
         .from('room-images')
         .upload(fileName, file);
 
-      console.log("Upload response:", uploadResponse); // 👈 log full response
+      console.log("Upload response:", uploadResponse);
 
       if (uploadResponse.error) {
         console.error("File upload error:", uploadResponse.error);
@@ -185,7 +183,6 @@ const PostRoomPage = () => {
         setIsSubmitting(false);
         return;
       }
-
 
       // Step 2: Get the public URL for the uploaded file
       const { data } = supabase.storage
@@ -209,8 +206,7 @@ const PostRoomPage = () => {
         {
           user_id: userId,
           description: formData.description,
-          room_type: formData.roomType,
-          bhk_type: formData.roomType === "PG" ? null : formData.bhkType,
+          bhk_type: formData.bhkType,
           price: formData.price,
           state: formData.state,
           district: formData.district,
@@ -220,7 +216,6 @@ const PostRoomPage = () => {
           longitude: formData.longitude,
           image_urls: imageUrls,
         }
-
       ]);
 
     if (insertError) {
@@ -289,45 +284,24 @@ const PostRoomPage = () => {
           {formErrors.price && <p className="text-red-600 text-sm mt-1">{formErrors.price}</p>}
         </div>
 
-        {/* Room Type and BHK Type in one row */}
-        <div className="mb-4 flex flex-col sm:flex-row gap-4">
-          {/* Room Type */}
-          <div className="w-full sm:w-1/2">
-            <label className="block mb-1 font-medium text-sm text-gray-700">Room Type</label>
-            <select
-              value={formData.roomType}
-              onChange={(e) =>
-                setFormData({ ...formData, roomType: e.target.value, bhkType: '' })
-              }
-              className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">-- Select Room Type --</option>
-              <option value="Private">Private</option>
-              <option value="Shared">Shared</option>
-              <option value="PG">PG</option>
-            </select>
-          </div>
-
-          {/* BHK Type – only if not PG */}
-          {formData.roomType !== 'PG' && (
-            <div className="w-full sm:w-1/2">
-              <label className="block mb-1 font-medium text-sm text-gray-700">BHK Type</label>
-              <select
-                value={formData.bhkType}
-                onChange={(e) =>
-                  setFormData({ ...formData, bhkType: e.target.value })
-                }
-                className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">-- Select BHK Type --</option>
-                {bhkTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+        {/* BHK Type */}
+        <div>
+          <label className="block mb-1 font-medium text-gray-700">BHK Type</label>
+          <Select
+            onValueChange={(value) => setFormData({ ...formData, bhkType: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select BHK Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {bhkTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {formErrors.bhkType && <p className="text-red-600 text-sm mt-1">{formErrors.bhkType}</p>}
         </div>
 
         {/* State and District */}
@@ -461,11 +435,20 @@ const PostRoomPage = () => {
 
         </div>
 
+        {/* Error Display */}
+        {error && <p className="text-red-600">{error}</p>}
+        {submissionStatus && <p className={isSubmitting ? "text-blue-600" : "text-green-600"}>{submissionStatus}</p>}
+
         {/* Submit Button */}
-        <Button className="w-full sm:w-auto">Post Room</Button>
+        <Button 
+          type="submit" 
+          className="w-full sm:w-auto"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Posting...' : 'Post Room'}
+        </Button>
       </form>
     </div>
-
   );
 }
 

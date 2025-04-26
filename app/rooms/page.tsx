@@ -153,12 +153,11 @@ export default function RoomsPage() {
               </Carousel>
             </div>
 
-            <h2 className="text-lg font-bold mt-4">{room.title}</h2>
             <p className="text-sm text-gray-600">
               {room.district}, {room.state}
             </p>
             <p className="mt-1 font-medium">₹{room.price}</p>
-            <p className="text-sm italic">{room.room_type}</p>
+            <p className="text-sm italic">{room.bhk_type}</p>
             <div className="mt-2 text-sm text-gray-500">
               <p>Post at: {new Date(room.created_at).toLocaleDateString()}</p>
               <p>Posted by: {room.profiles?.name || 'Unknown User'}</p>

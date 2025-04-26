@@ -143,30 +143,38 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
       )}
       
       {/* Room Info */}
-      <div>
-  <p className="text-gray-700 mb-4 text-lg">{room.description}</p>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <div>
-      <p><strong>Room Type:</strong> {room.room_type}</p>
-      {room.bhk_type && <p><strong>BHK Type:</strong> {room.bhk_type}</p>}
-      <p><strong>Price:</strong> ₹{room.price}</p>
-      <p><strong>Location:</strong> {room.locality}, {room.district}, {room.state}</p>
-      {room.address && <p><strong>Address:</strong> {room.address}</p>}
-    </div>
-    <div>
-      <p><strong>Posted on:</strong> {new Date(room.created_at).toLocaleDateString()}</p>
-      <p><strong>Posted by:</strong> {room.profiles?.name || 'Unknown User'}</p>
-    </div>
-    <div>
-      <p><strong>Description: </strong>{room.description}</p>
-    </div>
-  </div>
-</div>
-
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <h2 className="text-xl font-semibold mb-4">Room Information</h2>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <div className="mb-4">
+              <p className="font-bold text-lg text-blue-600">₹{room.price}</p>
+              <p className="text-gray-700 font-medium"><strong>Type: </strong>{room.bhk_type || 'Room'}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <p><strong>Location:</strong> {room.locality}, {room.district}, {room.state}</p>
+              {room.address && <p><strong>Address:</strong> {room.address}</p>}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <p><strong>Posted on:</strong> {new Date(room.created_at).toLocaleDateString()}</p>
+            <p><strong>Posted by:</strong> {room.profiles?.name || 'Unknown User'}</p>
+          </div>
+        </div>
+        
+        <div className="mt-6">
+          <h3 className="font-medium mb-2">Description</h3>
+          <p className="text-gray-700">{room.description}</p>
+        </div>
+      </div>
       
-      {/* RoomDetailMap for showing a single pin */}
+      {/* Map */}
       {room.latitude && room.longitude ? (
-        <div className="h-[400px] w-full">
+        <div className="h-[400px] w-full rounded-lg overflow-hidden shadow-sm">
+          <h2 className="text-xl font-semibold mb-2">Location</h2>
           <MapWrapper room={room} />
         </div>
       ) : (

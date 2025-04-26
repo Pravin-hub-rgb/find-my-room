@@ -72,10 +72,9 @@ export default function RecentRooms() {
                 </Carousel>
               </div>
 
-              <h2 className="text-base font-semibold mt-3">{room.title}</h2>
               <p className="text-xs text-gray-600">{room.district}, {room.state}</p>
               <p className="mt-1 font-medium">₹{room.price}</p>
-              <p className="text-xs italic">{room.room_type}</p>
+              <p className="text-xs italic">{room.bhk_type}</p>
               <div className="mt-2 text-xs text-gray-500">
                 <p>Posted on: {new Date(room.created_at).toLocaleDateString()}</p>
                 <p>Posted by: {room.profiles?.name || 'Unknown User'}</p>

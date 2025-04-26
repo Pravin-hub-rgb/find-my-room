@@ -22,7 +22,6 @@ interface EditPageProps {
 // Room update data interface
 interface RoomUpdateData {
   description: string;
-  room_type: string;
   price: string;
   state: string;
   district: string;
@@ -31,7 +30,7 @@ interface RoomUpdateData {
   latitude: number | null;
   longitude: number | null;
   image_urls: string[];
-  bhk_type?: string | null;  // Make bhk_type optional
+  bhk_type: string | null;
 }
 
 // This is the exported client component that will be used by the server page component
@@ -41,8 +40,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
   const [room, setRoom] = useState<any>(null);
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
-  // Add explicit state variables for room type and bhk type
-  const [selectedRoomType, setSelectedRoomType] = useState<string>('');
+  // Add explicit state variable for bhk type
   const [selectedBhkType, setSelectedBhkType] = useState<string>('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -55,7 +53,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
   const [formData, setFormData] = useState({
     description: '',
     price: '',
-    roomType: '', // This corresponds to room_type in the database
     state: '',
     district: '',
     locality: '',
@@ -70,8 +67,19 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     district: '',
     locality: '',
     price: '',
+    bhkType: '',
     images: ''
   });
+
+  // BHK types array matching the create page
+  const bhkTypes = [
+    "1 RK",
+    "Studio",
+    "1 BHK",
+    "2 BHK",
+    "3 BHK",
+    "Other"
+  ];
 
   useEffect(() => {
     const loadData = async () => {
@@ -108,21 +116,16 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         // Set the room data
         setRoom(roomData);
         
-        // Debug logs - Add these to see exact values from database
+        // Debug logs
         console.log("Fetched room data:", roomData);
-        console.log("Room type from DB:", roomData.room_type);
         console.log("BHK type from DB:", roomData.bhk_type);
         
-        // Map the values from database to match exactly the values in your Select components
-        // This is the key fix - ensuring the values match exactly what's in your SelectItem values
-        let mappedRoomType = roomData.room_type || '';
+        // Map the values from database
         let mappedBhkType = roomData.bhk_type || '';
         
         // Make sure these values exactly match your SelectItem values
-        console.log("Setting room type to:", mappedRoomType);
         console.log("Setting BHK type to:", mappedBhkType);
         
-        setSelectedRoomType(mappedRoomType);
         setSelectedBhkType(mappedBhkType);
         setSelectedState(roomData.state || '');
         setSelectedDistrict(roomData.district || '');
@@ -131,7 +134,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         setFormData({
           description: roomData.description || '',
           price: roomData.price?.toString() || '',
-          roomType: mappedRoomType,
           state: roomData.state || '',
           district: roomData.district || '',
           locality: roomData.locality || '',
@@ -227,6 +229,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
       district: formData.district ? '' : 'District is required',
       locality: formData.locality ? '' : 'Locality is required',
       price: formData.price && parseFloat(formData.price) > 0 ? '' : 'Valid price required',
+      bhkType: formData.bhkType ? '' : 'BHK type is required',
       images: (existingImages.length - imagesToRemove.length > 0) || imageFiles.length > 0 ? '' : 'At least one image required'
     };
 
@@ -282,7 +285,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     // Step 3: Update room data in the database
     const updateData: RoomUpdateData = {
       description: formData.description,
-      room_type: selectedRoomType, // Use the explicit state variable
       price: formData.price,
       state: formData.state,
       district: formData.district,
@@ -291,14 +293,8 @@ export function EditRoomForm({ roomId }: EditPageProps) {
       latitude: formData.latitude,
       longitude: formData.longitude,
       image_urls: finalImageUrls,
+      bhk_type: selectedBhkType,
     };
-    
-    // Only include bhk_type when not PG
-    if (selectedRoomType !== 'PG') {
-      updateData.bhk_type = selectedBhkType; // Use the explicit state variable
-    } else {
-      updateData.bhk_type = null;
-    }
 
     const { error: updateError } = await supabase
       .from('rooms')
@@ -322,25 +318,24 @@ export function EditRoomForm({ roomId }: EditPageProps) {
 
   // For debugging - remove in production
   console.log("Current form data:", formData);
-  console.log("Selected room type:", selectedRoomType);
   console.log("Selected BHK type:", selectedBhkType);
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-4">
-      <h1 className="text-2xl font-bold">Edit Room</h1>
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow space-y-6">
+      <h1 className="text-3xl font-semibold text-gray-800">Edit Room</h1>
 
       {submissionStatus && (
-        <div className={`p-3 rounded ${submissionStatus.includes("Error") ? "bg-red-100" : "bg-green-100"}`}>
+        <div className={`p-3 rounded ${submissionStatus.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
           {submissionStatus}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Description */}
         <div>
-          <label className="block mb-1">Description</label>
+          <label className="block mb-1 font-medium text-gray-700">Description</label>
           <Textarea
-            placeholder="Description"
+            placeholder="Describe your room..."
             value={formData.description}
             onChange={e => setFormData({ ...formData, description: e.target.value })}
           />
@@ -348,122 +343,97 @@ export function EditRoomForm({ roomId }: EditPageProps) {
 
         {/* Price */}
         <div>
-          <label className="block mb-1">Price (₹)</label>
+          <label className="block mb-1 font-medium text-gray-700">Price (₹)</label>
           <Input
             type="number"
-            placeholder="Price (₹)"
+            placeholder="e.g. 5000"
             value={formData.price}
             onChange={e => setFormData({ ...formData, price: e.target.value })}
           />
-          {formErrors.price && <p className="text-red-600">{formErrors.price}</p>}
+          {formErrors.price && <p className="text-red-600 text-sm mt-1">{formErrors.price}</p>}
         </div>
 
-        {/* Room Type */}
+        {/* BHK Type */}
         <div>
-          <label className="block mb-1">Room Type</label>
+          <label className="block mb-1 font-medium text-gray-700">BHK Type</label>
           <Select
-            value={selectedRoomType}
+            value={selectedBhkType}
             onValueChange={(value) => {
-              console.log("Changing room type to:", value);
-              setSelectedRoomType(value);
-              // Reset BHK type if PG is selected
-              if (value === 'PG') {
-                setSelectedBhkType('');
-              }
-              setFormData({ ...formData, roomType: value });
+              console.log("Changing BHK type to:", value);
+              setSelectedBhkType(value);
+              setFormData({ ...formData, bhkType: value });
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select Room Type" />
+              <SelectValue placeholder="Select BHK Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="PG">PG</SelectItem>
-              <SelectItem value="Private">Private</SelectItem> 
-              <SelectItem value="Shared">Shared</SelectItem> 
+              {bhkTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+          {formErrors.bhkType && <p className="text-red-600 text-sm mt-1">{formErrors.bhkType}</p>}
         </div>
 
-        {/* BHK Type Field, shown only if roomType is not 'PG' */}
-        {selectedRoomType && selectedRoomType !== 'PG' && (
+        {/* State and District */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-1">BHK Type</label>
+            <label className="block mb-1 font-medium text-gray-700">State</label>
             <Select
-              value={selectedBhkType}
+              value={selectedState}
               onValueChange={(value) => {
-                console.log("Changing BHK type to:", value);
-                setSelectedBhkType(value);
-                setFormData({ ...formData, bhkType: value });
+                setSelectedState(value);
+                setSelectedDistrict('');
+                setFormData(prev => ({ ...prev, state: value, district: '' }));
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select BHK Type" />
+                <SelectValue placeholder="Select State" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1 BHK">1 BHK</SelectItem> 
-                <SelectItem value="2 BHK">2 BHK</SelectItem> 
-                <SelectItem value="3 BHK">3 BHK</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
+                {statesAndDistricts.map(stateObj => (
+                  <SelectItem key={stateObj.state} value={stateObj.state}>
+                    {stateObj.state}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            {formErrors.state && <p className="text-red-600 text-sm mt-1">{formErrors.state}</p>}
           </div>
-        )}
 
-        {/* State */}
-        <div>
-          <label className="block mb-1">State</label>
-          <Select
-            value={selectedState}
-            onValueChange={(value) => {
-              setSelectedState(value);
-              setSelectedDistrict('');
-              setFormData(prev => ({ ...prev, state: value, district: '' }));
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select State" />
-            </SelectTrigger>
-            <SelectContent>
-              {statesAndDistricts.map(stateObj => (
-                <SelectItem key={stateObj.state} value={stateObj.state}>
-                  {stateObj.state}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {formErrors.state && <p className="text-red-600">{formErrors.state}</p>}
-        </div>
-
-        {/* District */}
-        <div>
-          <label className="block mb-1">District</label>
-          <Select
-            value={selectedDistrict}
-            disabled={!selectedState}
-            onValueChange={(value) => {
-              setSelectedDistrict(value);
-              setFormData(prev => ({ ...prev, district: value }));
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select District" />
-            </SelectTrigger>
-            <SelectContent>
-              {districts.map(d => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {formErrors.district && <p className="text-red-600">{formErrors.district}</p>}
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">District</label>
+            <Select
+              value={selectedDistrict}
+              disabled={!selectedState}
+              onValueChange={(value) => {
+                setSelectedDistrict(value);
+                setFormData(prev => ({ ...prev, district: value }));
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select District" />
+              </SelectTrigger>
+              <SelectContent>
+                {districts.map(d => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formErrors.district && <p className="text-red-600 text-sm mt-1">{formErrors.district}</p>}
+          </div>
         </div>
 
         {/* Locality */}
         <div>
-          <label className="block mb-1">Locality</label>
+          <label className="block mb-1 font-medium text-gray-700">Locality</label>
           <Input
-            placeholder="Locality"
+            placeholder="e.g. Andheri West"
             value={formData.locality}
             onChange={e => setFormData({ ...formData, locality: e.target.value })}
             onBlur={async () => {
@@ -479,14 +449,14 @@ export function EditRoomForm({ roomId }: EditPageProps) {
               }
             }}
           />
-          {formErrors.locality && <p className="text-red-600">{formErrors.locality}</p>}
+          {formErrors.locality && <p className="text-red-600 text-sm mt-1">{formErrors.locality}</p>}
         </div>
 
         {/* Address (optional) */}
         <div>
-          <label className="block mb-1">Address (optional)</label>
+          <label className="block mb-1 font-medium text-gray-700">Address (optional)</label>
           <Input
-            placeholder="Address (optional)"
+            placeholder="e.g. 123, XYZ Apartment"
             value={formData.address}
             onChange={e => setFormData({ ...formData, address: e.target.value })}
           />
@@ -495,15 +465,15 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         {/* Existing Images */}
         {existingImages.length > 0 && (
           <div>
-            <label className="block mb-2">Existing Images</label>
+            <label className="block mb-2 font-medium text-gray-700">Existing Images</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {existingImages.map((url, index) => (
                 <div key={index} className="relative">
-                  <div className={`relative h-32 w-full ${imagesToRemove.includes(url) ? 'opacity-30' : ''}`}>
+                  <div className={`relative aspect-square ${imagesToRemove.includes(url) ? 'opacity-30' : ''}`}>
                     <img
                       src={url}
                       alt={`Room image ${index + 1}`}
-                      className="h-full w-full object-cover rounded"
+                      className="h-full w-full object-cover rounded-md"
                     />
                   </div>
                   <button
@@ -522,36 +492,54 @@ export function EditRoomForm({ roomId }: EditPageProps) {
 
         {/* Add New Images */}
         <div>
-          <label htmlFor="image-upload" className="block mb-1">Add New Images:</label>
+          <label className="block font-medium text-gray-700 mb-1">Upload New Images</label>
+
+          <label
+            htmlFor="image-upload"
+            className="flex items-center justify-center h-32 border-2 border-dashed border-gray-400 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
+          >
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Click to upload or drag & drop images here</p>
+              <p className="text-xs text-gray-400">Only image files are supported</p>
+            </div>
+          </label>
+
           <input
-            type="file"
             id="image-upload"
+            type="file"
             accept="image/*"
             multiple
             onChange={handleFileChange}
-            className="mt-2"
+            className="hidden"
           />
         </div>
 
         {/* New Image Previews */}
         {imageFiles.length > 0 && (
-          <div>
-            <label className="block mb-2">New Images Preview</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {imageFiles.map((file, index) => (
-                <div key={index} className="relative h-32 w-full">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`Preview ${index + 1}`}
-                    className="h-full w-full object-cover rounded"
-                  />
-                </div>
-              ))}
-            </div>
+          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3">
+            {imageFiles.map((file, index) => (
+              <div key={index} className="relative aspect-square">
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={`Preview ${index + 1}`}
+                  className="object-cover w-full h-full rounded-md"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newFiles = imageFiles.filter((_, i) => i !== index);
+                    setImageFiles(newFiles);
+                  }}
+                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full text-xs px-2 py-1 hover:bg-red-700"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
-        {formErrors.images && <p className="text-red-600">{formErrors.images}</p>}
+        {formErrors.images && <p className="text-red-600 text-sm mt-1">{formErrors.images}</p>}
 
         {/* Submit Buttons */}
         <div className="flex space-x-4">
