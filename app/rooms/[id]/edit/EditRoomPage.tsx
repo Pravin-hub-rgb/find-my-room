@@ -121,7 +121,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         console.log("BHK type from DB:", roomData.bhk_type);
         
         // Map the values from database
-        let mappedBhkType = roomData.bhk_type || '';
+        const mappedBhkType = roomData.bhk_type || '';
         
         // Make sure these values exactly match your SelectItem values
         console.log("Setting BHK type to:", mappedBhkType);
@@ -173,7 +173,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
       const validFiles: File[] = [];
       let fileTooLarge = false;
 
-      for (let file of fileArray) {
+      for (const file of fileArray) {
         if (file.size > 500 * 1024) { // 500KB
           fileTooLarge = true;
           break;

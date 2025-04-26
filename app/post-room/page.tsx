@@ -103,7 +103,7 @@ const PostRoomPage = () => {
       const validFiles: File[] = []
       let fileTooLarge = false
 
-      for (let file of fileArray) {
+      for (const file of fileArray) {
         if (file.size > 500 * 1024) { // 500KB
           fileTooLarge = true
           break
