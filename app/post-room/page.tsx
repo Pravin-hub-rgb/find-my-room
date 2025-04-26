@@ -411,9 +411,10 @@ const PostRoomPage = () => {
           {formErrors.images && <p className="text-red-600 text-sm mt-1">{formErrors.images}</p>}
 
           {/* Image Previews */}
-          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3">
+          {/* Image Previews */}
+          <div className="mt-4 flex flex-wrap gap-3">
             {imageFiles.length > 0 && imageFiles.map((file, index) => (
-              <div key={index} className="relative aspect-square">
+              <div key={index} className="relative w-32 h-32">
                 <img
                   src={URL.createObjectURL(file)}
                   alt={`Preview ${index + 1}`}
@@ -432,7 +433,6 @@ const PostRoomPage = () => {
               </div>
             ))}
           </div>
-
         </div>
 
         {/* Error Display */}
@@ -440,8 +440,8 @@ const PostRoomPage = () => {
         {submissionStatus && <p className={isSubmitting ? "text-blue-600" : "text-green-600"}>{submissionStatus}</p>}
 
         {/* Submit Button */}
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="w-full sm:w-auto"
           disabled={isSubmitting}
         >

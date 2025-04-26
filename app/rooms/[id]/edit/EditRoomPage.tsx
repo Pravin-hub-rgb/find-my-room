@@ -462,82 +462,84 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           />
         </div>
 
-        {/* Existing Images */}
-        {existingImages.length > 0 && (
-          <div>
-            <label className="block mb-2 font-medium text-gray-700">Existing Images</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {existingImages.map((url, index) => (
-                <div key={index} className="relative">
-                  <div className={`relative aspect-square ${imagesToRemove.includes(url) ? 'opacity-30' : ''}`}>
-                    <img
-                      src={url}
-                      alt={`Room image ${index + 1}`}
-                      className="h-full w-full object-cover rounded-md"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleImageRemoval(url)}
-                    className={`absolute top-2 right-2 p-1 rounded-full ${imagesToRemove.includes(url) ? 'bg-green-500' : 'bg-red-500'
-                      } text-white text-xs`}
-                  >
-                    {imagesToRemove.includes(url) ? 'Keep' : 'Remove'}
-                  </button>
-                </div>
-              ))}
-            </div>
+       {/* Existing Images */}
+{/* Existing Images */}
+{existingImages.length > 0 && (
+  <div>
+    <label className="block mb-2 font-medium text-gray-700">Existing Images</label>
+    <div className="flex flex-wrap gap-2">
+      {existingImages.map((url, index) => (
+        <div key={index} className="relative w-1/3 sm:w-1/4 md:w-1/5">
+          <div className={`relative aspect-square ${imagesToRemove.includes(url) ? 'opacity-30' : ''}`}>
+            <img
+              src={url}
+              alt={`Room image ${index + 1}`}
+              className="h-full w-full object-cover rounded-md"
+            />
           </div>
-        )}
-
-        {/* Add New Images */}
-        <div>
-          <label className="block font-medium text-gray-700 mb-1">Upload New Images</label>
-
-          <label
-            htmlFor="image-upload"
-            className="flex items-center justify-center h-32 border-2 border-dashed border-gray-400 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
+          <button
+            type="button"
+            onClick={() => toggleImageRemoval(url)}
+            className={`absolute top-2 right-2 p-1 rounded-full ${imagesToRemove.includes(url) ? 'bg-green-500' : 'bg-red-500'
+              } text-white text-xs`}
           >
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Click to upload or drag & drop images here</p>
-              <p className="text-xs text-gray-400">Only image files are supported</p>
-            </div>
-          </label>
-
-          <input
-            id="image-upload"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-          />
+            {imagesToRemove.includes(url) ? 'Keep' : 'Remove'}
+          </button>
         </div>
+      ))}
+    </div>
+  </div>
+)}
 
-        {/* New Image Previews */}
-        {imageFiles.length > 0 && (
-          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3">
-            {imageFiles.map((file, index) => (
-              <div key={index} className="relative aspect-square">
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt={`Preview ${index + 1}`}
-                  className="object-cover w-full h-full rounded-md"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newFiles = imageFiles.filter((_, i) => i !== index);
-                    setImageFiles(newFiles);
-                  }}
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full text-xs px-2 py-1 hover:bg-red-700"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+{/* Add New Images */}
+<div>
+  <label className="block font-medium text-gray-700 mb-1">Upload New Images</label>
+
+  <label
+    htmlFor="image-upload"
+    className="flex items-center justify-center h-32 border-2 border-dashed border-gray-400 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
+  >
+    <div className="text-center">
+      <p className="text-sm text-gray-600">Click to upload or drag & drop images here</p>
+      <p className="text-xs text-gray-400">Only image files are supported</p>
+    </div>
+  </label>
+
+  <input
+    id="image-upload"
+    type="file"
+    accept="image/*"
+    multiple
+    onChange={handleFileChange}
+    className="hidden"
+  />
+</div>
+
+{/* New Image Previews */}
+{imageFiles.length > 0 && (
+  <div className="mt-4 flex flex-wrap gap-2">
+    {imageFiles.map((file, index) => (
+      <div key={index} className="relative w-1/3 sm:w-1/4 md:w-1/5">
+        <img
+          src={URL.createObjectURL(file)}
+          alt={`Preview ${index + 1}`}
+          className="object-cover w-full h-full rounded-md"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            const newFiles = imageFiles.filter((_, i) => i !== index);
+            setImageFiles(newFiles);
+          }}
+          className="absolute top-1 right-1 bg-red-600 text-white rounded-full text-xs px-2 py-1 hover:bg-red-700"
+        >
+          ✕
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
 
         {formErrors.images && <p className="text-red-600 text-sm mt-1">{formErrors.images}</p>}
 
