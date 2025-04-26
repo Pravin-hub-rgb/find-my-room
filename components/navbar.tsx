@@ -57,7 +57,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="w-full bg-white border-b px-6 py-4 flex items-center justify-between">
+    <nav className="w-full bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
       <Link href="/" className="text-xl font-semibold text-blue-600">
         Find My Room
       </Link>

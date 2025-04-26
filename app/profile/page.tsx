@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
+import UserDashboard from '@/components/UserDashboard';
 
 const Profile = () => {
     const router = useRouter();
@@ -80,6 +81,7 @@ const Profile = () => {
                     Edit
                 </Button>
             </div>
+                <UserDashboard />
         </div>
     );
 };

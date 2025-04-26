@@ -72,20 +72,6 @@ ALTER TABLE rooms DROP COLUMN room_type;
 
 ALTER TABLE profiles ADD COLUMN email text;
 
-
--- CREATE OR REPLACE FUNCTION public.create_profile_after_email_confirmation()
--- RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
--- BEGIN
---   -- Check if the user's email is confirmed
---   IF NEW.email_confirmed_at IS NOT NULL THEN
---     -- Insert into profiles with email and name
---     INSERT INTO public.profiles (id, name, email)
---     VALUES (NEW.id, SPLIT_PART(NEW.email, '@', 1), NEW.email);
---   END IF;
---   RETURN NEW;
--- END;
--- $$;
-
 -- Create the reviews table
 
 create table if not exists reviews (

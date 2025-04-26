@@ -35,47 +35,80 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+# 🏠 Find My Room
+- A full-stack room rental platform built with **Next.js 15 (App Router)** and **Supabase** as backend. Styled using **Tailwind CSS** and **Shadcn UI**, managed with **pnpm**. Features smooth authentication, room posting, searching, chatting, and map integration.
 
-## Shadcn for style components
-## Supabase Storage Bucket for storing the images
+## 🚀 Tech Stack
 
-🌟 2. Review & Rating System
+- **Frontend**: Next.js 15 (App Router)
+- **Backend**: Supabase (Auth, Database, Storage)
+- **UI**: Tailwind CSS + Shadcn UI
+- **Maps**: React Leaflet + OpenStreetMap
+- **Package Manager**: pnpm
 
-Let logged-in users leave:
+## 🔥 Core Features
 
-    ⭐ 1–5 stars
+- **Authentication**:
+  - Email/password login (via Supabase Auth)
 
-    📝 Comment Show:
 
-    Avg. rating on room card
+- **Room Posting**:
+  - Upload multiple room images to Supabase Storage
+  - Auto-fill state, district, and locality using reverse geocoding
+  - Post fields: City, District, Locality, Title, Description, Price, Room Type (BHK), Images, Address (optional)
 
-    Full list of reviews on detail page Needed:
 
-    reviews table with room_id, user_id, rating, comment, created_at
+- **Room Listings & Search**:
+  - Search/filter by city, district, price, and room type
+  - Rooms displayed on map with pins using React Leaflet
+  - Room cards show main image, title, location, and price
 
-    UI to submit & display reviews
 
-👤 3. User Profile Page
+- **Ratings & Reviews**:
+  - Users can leave a 1–5 star rating and a short review
+  - Average rating **calculated on frontend** dynamically (not stored in database)
 
-Show public user info:
 
-    Name, profile pic, bio (if added)
+- **User Profiles**:
+  - Public user pages showing profile photo, city, rooms posted, and reviews given/received
 
-    Rooms posted
 
-    Reviews given/received Needed:
 
-    /users/[id] page
+## 🧹 Project Decisions
+- **Clean and Modular Code**: Components and logic are organized neatly for maintainability `lib/` folder is used for helper functions (instead of `utils/`)
+- **Room Form** is shared between create and edit flows for a consistent user experience
+- **Frontend Calculations**: Ratings and other calculated data are done on the client side
+- **Supabase Storage** handles all image uploads, deletions, and replacements
+- **City & District Filtering** for efficient room browsing
 
-    Maybe extend profiles table to store name, city, bio, image
+## 📍 Setup Instructions
 
-🔍 4. Advanced Search & Filters
+- **Clone the Repo** 
+```bash 
+git clone  cd  
+```
+- **Install Dependencies** 
+```bash 
+pnpm install 
+```
+- **Create **`.env.local` and add: 
+```bash 
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+- **Run the Dev Server** 
+```bash 
+pnpm dev 
+```
 
-Make it easier for users to find rooms:
+## 🛠️ Todo / Future Features (Optional)
 
-    Filter by price range, room type, rating, etc.
+- Save favorite rooms (Wishlist)
+- Admin panel to manage reported listings
+- Notifications for new chat messages
+- SEO Optimization for better Google search ranking
 
-    Search by keywords (title, locality)
+## 📷 Screenshots
+- (Coming Soon!)
 
-    Sort by latest, cheapest, highest rated, etc.
 
+## Made with ❤️ and lots of pnpm installs.
