@@ -9,16 +9,14 @@ create table if not exists profiles (
 );
 
 -- Drop the existing trigger if it exists
-DROP TRIGGER IF EXISTS on_email_confirmation ON auth.users;
-
 CREATE OR REPLACE FUNCTION public.create_profile_after_email_confirmation()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   -- Check if the user's email is confirmed
   IF NEW.email_confirmed_at IS NOT NULL THEN
-    -- Insert a new profile into the profiles table with trimmed name from email
-    INSERT INTO public.profiles (id, name, city)
-    VALUES (NEW.id, SPLIT_PART(NEW.email, '@', 1), 'Default City');
+    -- Insert into profiles with email and name
+    INSERT INTO public.profiles (id, name, email)
+    VALUES (NEW.id, SPLIT_PART(NEW.email, '@', 1), NEW.email);
   END IF;
   RETURN NEW;
 END;
@@ -71,3 +69,19 @@ add column district text;
 
 alter table rooms add column bhk_type text;
 ALTER TABLE rooms DROP COLUMN room_type;
+
+ALTER TABLE profiles ADD COLUMN email text;
+
+
+-- CREATE OR REPLACE FUNCTION public.create_profile_after_email_confirmation()
+-- RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+-- BEGIN
+--   -- Check if the user's email is confirmed
+--   IF NEW.email_confirmed_at IS NOT NULL THEN
+--     -- Insert into profiles with email and name
+--     INSERT INTO public.profiles (id, name, email)
+--     VALUES (NEW.id, SPLIT_PART(NEW.email, '@', 1), NEW.email);
+--   END IF;
+--   RETURN NEW;
+-- END;
+-- $$;

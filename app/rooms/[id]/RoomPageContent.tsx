@@ -1,4 +1,3 @@
-// app/rooms/[id]/RoomPageContent.tsx
 'use client';
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
@@ -9,6 +8,7 @@ import MapWrapper from '@/components/MapWrapper';
 import { PencilIcon, TrashIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import ContactOwner from '@/components/ContactOwner';
 
 export default function RoomPageContent({ room, id }: { room: any, id: string }) {
   const [isOwner, setIsOwner] = useState(false);
@@ -18,7 +18,7 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
 
   useEffect(() => {
     async function checkOwnership() {
-      // Get current logged in user
+      // Get current logged-in user
       const { data } = await supabase.auth.getUser();
       // Check if current user is the owner of the room
       setIsOwner(data.user?.id === room.user_id);
@@ -168,6 +168,11 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
         <div className="mt-6">
           <h3 className="font-medium mb-2">Description</h3>
           <p className="text-gray-700">{room.description}</p>
+        </div>
+
+        {/* Contact the Owner Button */}
+        <div className="mt-6">
+          <ContactOwner user_id={room.user_id} />
         </div>
       </div>
       
