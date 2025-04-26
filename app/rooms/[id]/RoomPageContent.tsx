@@ -9,8 +9,16 @@ import { PencilIcon, TrashIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ContactOwner from '@/components/ContactOwner';
+import ReviewsSection from '@/components/ReviewSection';
+import StarRating from '@/components/StarRating';
 
-export default function RoomPageContent({ room, id }: { room: any, id: string }) {
+interface RoomPageContentProps {
+  room: any;
+  id: string;
+  reviews: any[];  // <-- Add this
+}
+
+export default function RoomPageContent({ room, id, reviews }: RoomPageContentProps) {
   const [isOwner, setIsOwner] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -39,7 +47,7 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
     try {
       // Get current session
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       // Make the request with the token
       const response = await fetch(`/api/rooms/${id}`, {
         method: 'DELETE',
@@ -48,16 +56,16 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
           'Authorization': `Bearer ${session?.access_token || ''}`,
         }
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete room');
       }
-      
+
       // Redirect to rooms listing
       router.push('/rooms');
       router.refresh();
-      
+
     } catch (error) {
       console.error('Error deleting room:', error);
       alert('Failed to delete room: ' + (error as Error).message);
@@ -80,8 +88,8 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
                 Edit Room
               </Button>
             </Link>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               className="flex items-center gap-2"
               onClick={handleDeleteClick}
             >
@@ -99,14 +107,14 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
             <h3 className="text-lg font-semibold mb-4">Delete Room</h3>
             <p className="mb-6">Are you sure you want to delete this room? This action cannot be undone.</p>
             <div className="flex justify-end gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleDeleteCancel}
                 disabled={isDeleting}
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 variant="destructive"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
@@ -141,41 +149,37 @@ export default function RoomPageContent({ room, id }: { room: any, id: string })
           </Carousel>
         </div>
       )}
-      
+
       {/* Room Info */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Room Information</h2>
-        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <div className="mb-4">
               <p className="font-bold text-lg text-blue-600">₹{room.price}</p>
               <p className="text-gray-700 font-medium"><strong>Type: </strong>{room.bhk_type || 'Room'}</p>
+              <StarRating roomId={room.id} />
             </div>
-            
             <div className="space-y-2">
               <p><strong>Location:</strong> {room.locality}, {room.district}, {room.state}</p>
               {room.address && <p><strong>Address:</strong> {room.address}</p>}
             </div>
           </div>
-          
           <div className="space-y-2">
             <p><strong>Posted on:</strong> {new Date(room.created_at).toLocaleDateString()}</p>
             <p><strong>Posted by:</strong> {room.profiles?.name || 'Unknown User'}</p>
           </div>
         </div>
-        
         <div className="mt-6">
           <h3 className="font-medium mb-2">Description</h3>
           <p className="text-gray-700">{room.description}</p>
         </div>
-
         {/* Contact the Owner Button */}
         <div className="mt-6">
           <ContactOwner user_id={room.user_id} />
         </div>
       </div>
-      
+      <ReviewsSection roomId={id} initialReviews={reviews} />
       {/* Map */}
       {room.latitude && room.longitude ? (
         <div className="h-[400px] w-full rounded-lg overflow-hidden shadow-sm">

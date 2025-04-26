@@ -85,3 +85,33 @@ ALTER TABLE profiles ADD COLUMN email text;
 --   RETURN NEW;
 -- END;
 -- $$;
+
+-- Create the reviews table
+
+create table if not exists reviews (
+  id uuid primary key default gen_random_uuid(),
+  room_id uuid references rooms(id) on delete cascade,
+  user_id uuid references profiles(id) on delete cascade,
+  rating integer not null check (rating >= 1 and rating <= 5),
+  comment text,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+
+  unique (room_id, user_id)
+);
+
+alter table reviews enable row level security;
+
+create policy "Anyone can view reviews"
+on reviews
+for select
+using (true);
+
+create policy "Only authenticated users can create reviews"
+on reviews
+for insert
+with check (auth.role() = 'authenticated');
+
+create policy "Only review owner can delete"
+on reviews
+for delete
+using (user_id = auth.uid());

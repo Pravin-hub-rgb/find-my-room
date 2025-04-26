@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Image from 'next/image';
 import Link from 'next/link';
+import StarRating from '@/components/StarRating';
 
 // BHK Types for filter
 const bhkTypes = ["1 RK", "Studio", "1 BHK", "2 BHK", "3 BHK", "Other"];
@@ -96,145 +97,150 @@ export default function RoomsPage() {
 
   return (
     <div className="p-6">
-  <h1 className="text-2xl font-semibold mb-4">Browse Rooms</h1>
+      <h1 className="text-2xl font-semibold mb-4">Browse Rooms</h1>
 
-  {/* Container for the sidebar and room cards */}
-  <div className="lg:flex space-y-6 lg:space-y-0">
-    {/* Filters Sidebar */}
-    <div className="w-full lg:w-1/4 space-y-6">
-      {/* Location Filters - Side by side on small screens, stacked on sidebar */}
-      <div className="flex flex-col space-y-4">
-        <div className="flex flex-col sm:flex-row sm:space-x-2 lg:flex-col lg:space-x-0 lg:space-y-4">
-          {/* Select State */}
-          <div className="w-full mb-4 sm:mb-0 lg:mb-0">
-            <label className="block mb-1">Select State</label>
+      {/* Container for the sidebar and room cards */}
+      <div className="lg:flex space-y-6 lg:space-y-0">
+        {/* Filters Sidebar */}
+        <div className="w-full lg:w-1/4 space-y-6">
+          {/* Location Filters - Side by side on small screens, stacked on sidebar */}
+          <div className="flex flex-col space-y-4">
+            <div className="flex flex-col sm:flex-row sm:space-x-2 lg:flex-col lg:space-x-0 lg:space-y-4">
+              {/* Select State */}
+              <div className="w-full mb-4 sm:mb-0 lg:mb-0">
+                <label className="block mb-1">Select State</label>
+                <select
+                  className="border px-3 py-2 w-full"
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                >
+                  <option value="">-- Choose a State --</option>
+                  {statesAndDistricts.map((s) => (
+                    <option key={s.state} value={s.state}>
+                      {s.state}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Select District */}
+              {districts.length > 0 && (
+                <div className="w-full">
+                  <label className="block mb-1">Select District</label>
+                  <select
+                    className="border px-3 py-2 w-full"
+                    value={selectedDistrict}
+                    onChange={(e) => setSelectedDistrict(e.target.value)}
+                  >
+                    <option value="">-- Choose a District --</option>
+                    {districts.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* BHK Type Filter */}
+          <div className="mb-4">
+            <label className="block mb-1">Select BHK Type</label>
             <select
               className="border px-3 py-2 w-full"
-              value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
+              value={selectedBhkType}
+              onChange={(e) => setSelectedBhkType(e.target.value)}
             >
-              <option value="">-- Choose a State --</option>
-              {statesAndDistricts.map((s) => (
-                <option key={s.state} value={s.state}>
-                  {s.state}
+              <option value="">-- Choose BHK Type --</option>
+              {bhkTypes.map((bhk) => (
+                <option key={bhk} value={bhk}>
+                  {bhk}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Select District */}
-          {districts.length > 0 && (
-            <div className="w-full">
-              <label className="block mb-1">Select District</label>
-              <select
-                className="border px-3 py-2 w-full"
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-              >
-                <option value="">-- Choose a District --</option>
-                {districts.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+          {/* Price Range Filter */}
+          <div className="mb-4">
+            <label className="block mb-1">Price Range</label>
+            <div className="flex items-center justify-between">
+              <input
+                type="number"
+                className="border px-3 py-2 w-1/3"
+                placeholder="Min Price"
+                value={minPrice}
+                onChange={(e) => setMinPrice(parseInt(e.target.value, 10))}
+              />
+              <span className="mx-2">to</span>
+              <input
+                type="number"
+                className="border px-3 py-2 w-1/3"
+                placeholder="Max Price"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(parseInt(e.target.value, 10))}
+              />
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* BHK Type Filter */}
-      <div className="mb-4">
-        <label className="block mb-1">Select BHK Type</label>
-        <select
-          className="border px-3 py-2 w-full"
-          value={selectedBhkType}
-          onChange={(e) => setSelectedBhkType(e.target.value)}
-        >
-          <option value="">-- Choose BHK Type --</option>
-          {bhkTypes.map((bhk) => (
-            <option key={bhk} value={bhk}>
-              {bhk}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Price Range Filter */}
-      <div className="mb-4">
-        <label className="block mb-1">Price Range</label>
-        <div className="flex items-center justify-between">
-          <input
-            type="number"
-            className="border px-3 py-2 w-1/3"
-            placeholder="Min Price"
-            value={minPrice}
-            onChange={(e) => setMinPrice(parseInt(e.target.value, 10))}
-          />
-          <span className="mx-2">to</span>
-          <input
-            type="number"
-            className="border px-3 py-2 w-1/3"
-            placeholder="Max Price"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(parseInt(e.target.value, 10))}
-          />
-        </div>
-      </div>
-
-      <Button onClick={() => fetchRooms()} disabled={!selectedDistrict || loading} className="w-full mb-4">
-        {loading ? 'Loading...' : 'Fetch Rooms'}
-      </Button>
-    </div>
-
-    {/* Room Cards Grid */}
-    <div className="flex-1 lg:ml-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
-        {rooms.map((room) => (
-          <div
-            key={room.id}
-            className="border rounded p-4 shadow-sm hover:shadow-md transition"
-          >
-            <div className="relative w-full">
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {Array.isArray(room.image_urls) &&
-                    room.image_urls.map((url: string, index: number) => (
-                      <CarouselItem key={index}>
-                        <div className="relative h-64 w-full">
-                          <Image
-                            src={url}
-                            alt={`Image ${index + 1}`}
-                            fill
-                            className="object-cover rounded"
-                          />
-                        </div>
-                      </CarouselItem>
-                    ))}
-                </CarouselContent>
-                <CarouselPrevious className="absolute left-2 h-8 w-8" />
-                <CarouselNext className="absolute right-2 h-8 w-8" />
-              </Carousel>
-            </div>
-
-            <p className="text-sm text-gray-600">
-              {room.district}, {room.state}
-            </p>
-            <p className="mt-1 font-medium">₹{room.price}</p>
-            <p className="text-sm italic">{room.bhk_type}</p>
-            <div className="mt-2 text-sm text-gray-500">
-              <p>Post at: {new Date(room.created_at).toLocaleDateString()}</p>
-              <p>Posted by: {room.profiles?.name || 'Unknown User'}</p>
-            </div>
-            <Button asChild className="mt-4 w-full">
-              <Link href={`/rooms/${room.id}`}>Show More Details</Link>
-            </Button>
           </div>
-        ))}
+
+          <Button onClick={() => fetchRooms()} disabled={!selectedDistrict || loading} className="w-full mb-4">
+            {loading ? 'Loading...' : 'Fetch Rooms'}
+          </Button>
+        </div>
+
+        {/* Room Cards Grid */}
+        <div className="flex-1 lg:ml-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+            {rooms.map((room) => (
+              <div
+                key={room.id}
+                className="border rounded p-4 shadow-sm hover:shadow-md transition"
+              >
+                <div className="relative w-full">
+                  <Carousel className="w-full">
+                    <CarouselContent>
+                      {Array.isArray(room.image_urls) &&
+                        room.image_urls.map((url: string, index: number) => (
+                          <CarouselItem key={index}>
+                            <div className="relative h-64 w-full">
+                              <Image
+                                src={url}
+                                alt={`Image ${index + 1}`}
+                                fill
+                                className="object-cover rounded"
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="absolute left-2 h-8 w-8" />
+                    <CarouselNext className="absolute right-2 h-8 w-8" />
+                  </Carousel>
+                </div>
+
+                <p className="text-sm text-gray-600 mt-2">
+                  {room.district}, {room.state}
+                </p>
+
+                <p className="mt-1 font-medium">₹{room.price}</p>
+                <p className="text-sm italic">{room.bhk_type}</p>
+
+                <StarRating roomId={room.id} />
+
+                <div className="mt-2 text-sm text-gray-500">
+                  <p>Post at: {new Date(room.created_at).toLocaleDateString()}</p>
+                  <p>Posted by: {room.profiles?.name || 'Unknown User'}</p>
+                </div>
+                <Button asChild className="mt-4 w-full">
+                  <Link href={`/rooms/${room.id}`}>Show More Details</Link>
+                </Button>
+              </div>
+            ))}
+
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
 
 
