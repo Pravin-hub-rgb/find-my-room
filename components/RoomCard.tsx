@@ -1,5 +1,4 @@
 // components/RoomCard.tsx
-
 'use client'
 
 import { FC } from 'react'
@@ -13,6 +12,7 @@ interface RoomCardProps {
   room: {
     id: string
     image_urls: string[]
+    locality: string
     district: string
     state: string
     price: number
@@ -49,7 +49,11 @@ const RoomCard: FC<RoomCardProps> = ({ room }) => {
         </Carousel>
       </div>
 
-      <p className="text-xs text-gray-600">{room.district}, {room.state}</p>
+      <p className="text-xs text-gray-600">
+        {room.locality === room.district
+          ? `${room.district}, ${room.state}`
+          : `${room.locality}, ${room.district}, ${room.state}`}
+      </p>
       <p className="mt-1 font-medium">₹{room.price}</p>
       <p className="text-xs italic">{room.bhk_type}</p>
 
