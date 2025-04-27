@@ -41,7 +41,7 @@ const StarRating: React.FC<StarRatingProps> = ({ roomId }) => {
   }, [fetchAverageRating]);
 
   const renderStar = (position: number) => {
-    if (!averageRating) return <EmptyStar key={position} />;
+    if (averageRating === null) return <EmptyStar key={position} />;
 
     const difference = averageRating - position;
 
@@ -81,11 +81,10 @@ const EmptyStar = () => (
 
 interface PartialStarProps {
   percentage: number;
-  key?: number;
 }
 
-const PartialStar: React.FC<PartialStarProps> = ({ percentage, key }) => (
-  <div className="relative w-5 h-5" key={key}>
+const PartialStar: React.FC<PartialStarProps> = ({ percentage }) => (
+  <div className="relative w-5 h-5">
     <EmptyStar />
     <div className="absolute top-0 left-0 overflow-hidden" style={{ width: `${percentage}%` }}>
       <FullStar />
