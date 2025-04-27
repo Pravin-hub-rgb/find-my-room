@@ -260,7 +260,7 @@ const PostRoomPage = () => {
       const res = await fetch(`${baseUrl}${encodeURIComponent(query)}`);
       const data = await res.json();
       if (data?.length) {
-        let { lat, lon } = data[0];
+        const { lat, lon } = data[0];
         console.log("Lat/Lng found:", lat, lon);
         return { lat: parseFloat(lat), lng: parseFloat(lon) };
       }
