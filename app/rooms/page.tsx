@@ -12,6 +12,7 @@ interface Room {
   price: number;
   state: string;
   district: string;
+  locality: string;
   image_urls: string[];
   profiles: {
     name: string;
@@ -58,6 +59,7 @@ export default function RoomsPage() {
       setRooms(filteredRooms.map(room => ({
         ...room,
         image_urls: Array.isArray(room.image_urls) ? room.image_urls : [],
+        locality: room.locality || 'Not specified'
       })));
     } catch (error) {
       console.error("Error fetching rooms:", error);

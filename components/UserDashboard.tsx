@@ -14,6 +14,7 @@ interface Room {
     bhk_type: string;        // Type of the room (e.g., 1BHK, 2BHK, etc.)
     created_at: string;      // Timestamp of when the room was created
     profiles?: { name: string }; // Optional profile information
+    locality: string
 }
 
 const UserDashboard = () => {

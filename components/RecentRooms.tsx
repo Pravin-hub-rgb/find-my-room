@@ -23,7 +23,7 @@ interface RoomWithRelations {
   reviews?: Review[];
   // Add other room properties as needed
   title?: string;
-  locality?: string;
+  locality: string;
   room_type?: string;
 }
 
@@ -49,6 +49,7 @@ export default function RecentRooms() {
             ...room,
             image_urls: Array.isArray(room.image_urls) ? room.image_urls : [],
             bhk_type: room.bhk_type || '', // Ensure bhk_type exists
+            locality: room.locality || 'Not specified'
           }))
         )
       }

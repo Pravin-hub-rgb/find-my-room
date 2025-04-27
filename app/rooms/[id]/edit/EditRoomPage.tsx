@@ -248,21 +248,15 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     }
   };
 
-  const updateLocationCoordinates = async () => {
-    console.log("updateLocationCoordinates called with current formData:", {
-      state: formData.state,
-      district: formData.district,
-      locality: formData.locality,
-      currentLat: formData.latitude,
-      currentLng: formData.longitude
-    });
+  // Update coordinates based on location data
+  const updateLocationCoordinates = async (state: string, district: string, locality: string) => {
+    console.log("updateLocationCoordinates called with:", { state, district, locality });
     
-    if (formData.state && formData.district) {
+    if (state && district) {
       console.log("Fetching new coordinates...");
-      const result = await fetchLatLng(formData.state, formData.district, formData.locality);
+      const result = await fetchLatLng(state, district, locality);
       
       if (result) {
-        console.log("Updating coordinates from:", { lat: formData.latitude, lng: formData.longitude });
         console.log("Updating coordinates to:", { lat: result.lat, lng: result.lng });
         
         // Using function form of setState to ensure we're working with the latest state
@@ -275,11 +269,14 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           console.log("Updated formData with new coordinates:", updated);
           return updated;
         });
+        return true;
       } else {
-        console.log("No coordinates retrieved, keeping current values");
+        console.log("No coordinates retrieved");
+        return false;
       }
     } else {
       console.log("Missing required location data (state or district)");
+      return false;
     }
   };
 
@@ -505,17 +502,9 @@ export function EditRoomForm({ roomId }: EditPageProps) {
                 
                 // Now that district is set, we can fetch coordinates
                 // Use a slight delay to ensure state update has completed
-                setTimeout(async () => {
+                setTimeout(() => {
                   if (selectedState && value) {
-                    console.log("Getting coordinates after district change");
-                    const coordsResult = await fetchLatLng(selectedState, value, formData.locality);
-                    if (coordsResult) {
-                      setFormData(prev => ({
-                        ...prev,
-                        latitude: coordsResult.lat,
-                        longitude: coordsResult.lng
-                      }));
-                    }
+                    updateLocationCoordinates(selectedState, value, formData.locality);
                   }
                 }, 100);
               }}
@@ -544,21 +533,12 @@ export function EditRoomForm({ roomId }: EditPageProps) {
             onChange={e => {
               setFormData(prev => ({ ...prev, locality: e.target.value }));
             }}
-            onBlur={async (e) => {
+            onBlur={(e) => {
               console.log("Locality input blurred with value:", e.target.value);
               
               // Directly update coordinates if we have state and district
               if (selectedState && selectedDistrict) {
-                const localityValue = e.target.value;
-                console.log("Getting coordinates after locality change");
-                const coordsResult = await fetchLatLng(selectedState, selectedDistrict, localityValue);
-                if (coordsResult) {
-                  setFormData(prev => ({
-                    ...prev,
-                    latitude: coordsResult.lat,
-                    longitude: coordsResult.lng
-                  }));
-                }
+                updateLocationCoordinates(selectedState, selectedDistrict, e.target.value);
               }
             }}
           />
