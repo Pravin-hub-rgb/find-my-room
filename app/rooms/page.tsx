@@ -16,7 +16,7 @@ interface Room {
   profiles: {
     name: string;
   };
-  created_at: string; // Added this required property
+  created_at: string;
   // Add other room properties as needed
 }
 
@@ -31,6 +31,7 @@ export default function RoomsPage() {
   const [selectedBhkType, setSelectedBhkType] = useState('');
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
+  const [isUserLoading, setIsUserLoading] = useState(true);
 
   const fetchRooms = useCallback(async (stateOverride?: string, districtOverride?: string) => {
     const stateToUse = stateOverride || selectedState;
@@ -67,20 +68,28 @@ export default function RoomsPage() {
 
   useEffect(() => {
     const loadProfileAndRooms = async () => {
+      setIsUserLoading(true);
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-
-        if (user) {
+        // Use getSession instead of getUser to handle missing session gracefully
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Auth session error:", error);
+          setIsUserLoading(false);
+          return;
+        }
+        
+        // Only proceed with profile fetching if we have a session and user
+        if (data.session?.user) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('state, district')
-            .eq('id', user.id)
+            .eq('id', data.session.user.id)
             .single();
 
-          if (profileError) throw profileError;
-
-          if (profile?.state && profile?.district) {
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
+          } else if (profile?.state && profile?.district) {
             setSelectedState(profile.state);
             setSelectedDistrict(profile.district);
 
@@ -92,6 +101,8 @@ export default function RoomsPage() {
         }
       } catch (error) {
         console.error("Error loading profile:", error);
+      } finally {
+        setIsUserLoading(false);
       }
     };
 
@@ -118,6 +129,7 @@ export default function RoomsPage() {
                   className="border px-3 py-2 w-full"
                   value={selectedState}
                   onChange={(e) => setSelectedState(e.target.value)}
+                  disabled={isUserLoading}
                 >
                   <option value="">-- Choose a State --</option>
                   {statesAndDistricts.map((s) => (
@@ -135,6 +147,7 @@ export default function RoomsPage() {
                     className="border px-3 py-2 w-full"
                     value={selectedDistrict}
                     onChange={(e) => setSelectedDistrict(e.target.value)}
+                    disabled={isUserLoading}
                   >
                     <option value="">-- Choose a District --</option>
                     {districts.map((d) => (
@@ -154,6 +167,7 @@ export default function RoomsPage() {
               className="border px-3 py-2 w-full"
               value={selectedBhkType}
               onChange={(e) => setSelectedBhkType(e.target.value)}
+              disabled={isUserLoading}
             >
               <option value="">-- Choose BHK Type --</option>
               {bhkTypes.map((bhk) => (
@@ -174,6 +188,7 @@ export default function RoomsPage() {
                 value={minPrice}
                 onChange={(e) => setMinPrice(Number(e.target.value))}
                 min="0"
+                disabled={isUserLoading}
               />
               <span className="mx-2">to</span>
               <input
@@ -183,13 +198,14 @@ export default function RoomsPage() {
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 min={minPrice}
+                disabled={isUserLoading}
               />
             </div>
           </div>
 
           <Button 
             onClick={() => fetchRooms()} 
-            disabled={!selectedDistrict || loading} 
+            disabled={!selectedDistrict || loading || isUserLoading} 
             className="w-full mb-4"
           >
             {loading ? 'Loading...' : 'Fetch Rooms'}
@@ -197,15 +213,23 @@ export default function RoomsPage() {
         </div>
 
         <div className="flex-1 lg:ml-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
-            {rooms.map((room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </div>
-          {rooms.length === 0 && !loading && (
-            <div className="text-center py-10 text-gray-500">
-              No rooms found matching your criteria
-            </div>
+          {isUserLoading ? (
+            <div className="text-center py-10">Loading...</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+                {rooms.map((room) => (
+                  <RoomCard key={room.id} room={room} />
+                ))}
+              </div>
+              {rooms.length === 0 && !loading && (
+                <div className="text-center py-10 text-gray-500">
+                  {selectedState && selectedDistrict 
+                    ? "No rooms found matching your criteria" 
+                    : "Please select a state and district to see available rooms"}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

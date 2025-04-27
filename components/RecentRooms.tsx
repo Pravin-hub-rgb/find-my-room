@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import RoomCard from './RoomCard'
+import Image from 'next/image'
 
 interface Review {
   rating: number;
@@ -60,7 +61,12 @@ export default function RecentRooms() {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Recently Posted Rooms</h2>
+      <h2 className="text-xl font-semibold mb-4 flex items-center">Recently Posted Rooms <Image
+            src="/mainxx.png"
+            alt="Logo"
+            width={50}
+            height={50}
+          /> </h2>
 
       {loading ? (
         <p>Loading...</p>

@@ -22,7 +22,7 @@ const PostRoomPage = () => {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedState, setSelectedState] = useState('');
-  // Since we're using it in the districts variable below, not removing it
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -230,25 +230,80 @@ const PostRoomPage = () => {
     return null;
   }
 
-  const fetchLatLng = async (state: string, district: string, locality: string) => {
-    const query = locality
-      ? `${locality}, ${district}, ${state}, India`
-      : `${district}, ${state}, India`;
+  // const fetchLatLng = async (state: string, district: string, locality: string) => {
+  //   const query = locality
+  //     ? `${locality}, ${district}, ${state}, India`
+  //     : `${district}, ${state}, India`;
 
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+  //   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
 
-    try {
-      const res = await fetch(url);
+  //   try {
+  //     const res = await fetch(url);
+  //     const data = await res.json();
+  //     if (data?.length) {
+  //       const { lat, lon } = data[0];
+  //       return { lat: parseFloat(lat), lng: parseFloat(lon) };
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching lat/lng:", err);
+  //   }
+  //   return null;
+  // };
+
+  const fetchLatLng = async (state: string, district: string, locality: string, scatter = true) => {
+    const baseUrl = "https://nominatim.openstreetmap.org/search?format=json&q=";
+
+    // Helper function to fetch and return lat/lng from a query
+    const tryFetch = async (query: string) => {
+      console.log("Trying with query:", query);
+
+      const res = await fetch(`${baseUrl}${encodeURIComponent(query)}`);
       const data = await res.json();
       if (data?.length) {
-        const { lat, lon } = data[0];
+        let { lat, lon } = data[0];
+        console.log("Lat/Lng found:", lat, lon);
         return { lat: parseFloat(lat), lng: parseFloat(lon) };
       }
+      return null;
+    };
+
+    try {
+      let location = null;
+
+      // 1. Try with locality + district + state
+      if (locality) {
+        location = await tryFetch(`${locality}, ${district}, ${state}, India`);
+      }
+
+      // 2. If failed, try with district + state
+      if (!location) {
+        location = await tryFetch(`${district}, ${state}, India`);
+      }
+
+      // 3. If still failed, try with state only
+      if (!location) {
+        location = await tryFetch(`${state}, India`);
+      }
+
+      // 4. If we got location, apply scatter before returning
+      if (location) {
+        if (scatter) {
+          const scatterAmount = 0.003; // ~300 meters random scatter
+          location.lat = parseFloat((location.lat + (Math.random() * scatterAmount * 2 - scatterAmount)).toFixed(6));
+          location.lng = parseFloat((location.lng + (Math.random() * scatterAmount * 2 - scatterAmount)).toFixed(6));
+          console.log("Scattered Lat/Lng:", location.lat, location.lng);
+        }
+        return location;
+      }
+
+      console.log("No Lat/Lng found after all attempts.");
     } catch (err) {
       console.error("Error fetching lat/lng:", err);
     }
+
     return null;
   };
+
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow space-y-6">
