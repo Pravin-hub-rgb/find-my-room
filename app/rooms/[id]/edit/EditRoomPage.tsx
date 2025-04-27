@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import Image from 'next/image' // Added Next.js Image component
+import Image from 'next/image'
 import {
   Select,
   SelectContent,
@@ -37,7 +37,6 @@ interface RoomUpdateData {
 // This is the exported client component that will be used by the server page component
 export function EditRoomForm({ roomId }: EditPageProps) {
   const router = useRouter();
-  // We'll keep these variables since they're used in the component
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
@@ -58,7 +57,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     address: '',
     latitude: null as number | null,
     longitude: null as number | null,
-    bhkType: '' // This corresponds to bhk_type in the database
+    bhkType: ''
   });
 
   const [formErrors, setFormErrors] = useState({
@@ -89,7 +88,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         router.push('/auth/login');
         return;
       }
-      
+
       // Fetch room data
       try {
         const { data: roomData, error: roomError } = await supabase
@@ -97,28 +96,28 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           .select('*')
           .eq('id', roomId)
           .single();
-          
+
         if (roomError || !roomData) {
           setError("Room not found");
           setLoading(false);
           return;
         }
-        
+
         // Check if current user is the owner
         if (roomData.user_id !== userData.user.id) {
           setError("You don't have permission to edit this room");
           router.push(`/rooms/${roomId}`);
           return;
         }
-        
+
         // Map the values from database
         const mappedBhkType = roomData.bhk_type || '';
-        
+
         // Set state values
         setSelectedBhkType(mappedBhkType);
         setSelectedState(roomData.state || '');
         setSelectedDistrict(roomData.district || '');
-        
+
         // Initialize form data with room data
         setFormData({
           description: roomData.description || '',
@@ -131,12 +130,12 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           longitude: roomData.longitude || null,
           bhkType: mappedBhkType
         });
-        
+
         // Set existing images
         if (Array.isArray(roomData.image_urls)) {
           setExistingImages(roomData.image_urls);
         }
-        
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching room:", err);
@@ -144,7 +143,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, [roomId, router]);
 
@@ -189,24 +188,99 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     }
   };
 
-  const fetchLatLng = async (state: string, district: string, locality: string) => {
-    const query = locality
-      ? `${locality}, ${district}, ${state}, India`
-      : `${district}, ${state}, India`;
+  // Enhanced fetchLatLng function with multiple attempts and scatter
+  const fetchLatLng = async (state: string, district: string, locality: string, scatter = true) => {
+    const baseUrl = "https://nominatim.openstreetmap.org/search?format=json&q=";
+    console.log("fetchLatLng called with:", { state, district, locality });
 
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-
-    try {
-      const res = await fetch(url);
+    // Helper function to fetch and return lat/lng from a query
+    const tryFetch = async (query: string) => {
+      console.log("Trying with query:", query);
+      const res = await fetch(`${baseUrl}${encodeURIComponent(query)}`);
       const data = await res.json();
       if (data?.length) {
         const { lat, lon } = data[0];
+        console.log("Lat/Lng found:", lat, lon);
         return { lat: parseFloat(lat), lng: parseFloat(lon) };
       }
+      console.log("No results for query:", query);
+      return null;
+    };
+
+    try {
+      let location = null;
+
+      // 1. Try with locality + district + state
+      if (locality) {
+        location = await tryFetch(`${locality}, ${district}, ${state}, India`);
+      }
+
+      // 2. If failed, try with district + state
+      if (!location) {
+        location = await tryFetch(`${district}, ${state}, India`);
+      }
+
+      // 3. If still failed, try with state only
+      if (!location) {
+        location = await tryFetch(`${state}, India`);
+      }
+
+      // 4. If we got location, apply scatter before returning
+      if (location) {
+        const origLat = location.lat;
+        const origLng = location.lng;
+
+        if (scatter) {
+          const scatterAmount = 0.003; // ~300 meters random scatter
+          location.lat = parseFloat((location.lat + (Math.random() * scatterAmount * 2 - scatterAmount)).toFixed(6));
+          location.lng = parseFloat((location.lng + (Math.random() * scatterAmount * 2 - scatterAmount)).toFixed(6));
+          console.log("Original Lat/Lng:", origLat, origLng);
+          console.log("Scattered Lat/Lng:", location.lat, location.lng);
+        }
+        return location;
+      }
+
+      console.log("No Lat/Lng found after all attempts.");
+      return null;
     } catch (err) {
       console.error("Error fetching lat/lng:", err);
+      return null;
     }
-    return null;
+  };
+
+  const updateLocationCoordinates = async () => {
+    console.log("updateLocationCoordinates called with current formData:", {
+      state: formData.state,
+      district: formData.district,
+      locality: formData.locality,
+      currentLat: formData.latitude,
+      currentLng: formData.longitude
+    });
+    
+    if (formData.state && formData.district) {
+      console.log("Fetching new coordinates...");
+      const result = await fetchLatLng(formData.state, formData.district, formData.locality);
+      
+      if (result) {
+        console.log("Updating coordinates from:", { lat: formData.latitude, lng: formData.longitude });
+        console.log("Updating coordinates to:", { lat: result.lat, lng: result.lng });
+        
+        // Using function form of setState to ensure we're working with the latest state
+        setFormData(prev => {
+          const updated = {
+            ...prev,
+            latitude: result.lat,
+            longitude: result.lng,
+          };
+          console.log("Updated formData with new coordinates:", updated);
+          return updated;
+        });
+      } else {
+        console.log("No coordinates retrieved, keeping current values");
+      }
+    } else {
+      console.log("Missing required location data (state or district)");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -231,78 +305,96 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     setIsSubmitting(true);
     setSubmissionStatus("Updating...");
 
+    // Use the current formData state directly when creating updateData
+    // This ensures we have the latest coordinates
+    const currentFormData = { ...formData };
+    
+    console.log("Current form data for submission:", currentFormData);
+
     // Step 1: Upload new images if any
     const newImageUrls: string[] = [];
 
-    for (let i = 0; i < imageFiles.length; i++) {
-      const file = imageFiles[i];
-      const fileName = `${Date.now()}-${file.name}`;
+    try {
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        const fileName = `${Date.now()}-${file.name}`;
 
-      // Upload the file to Supabase Storage
-      const uploadResponse = await supabase.storage
-        .from('room-images')
-        .upload(fileName, file);
+        // Upload the file to Supabase Storage
+        const uploadResponse = await supabase.storage
+          .from('room-images')
+          .upload(fileName, file);
 
-      if (uploadResponse.error) {
-        console.error("File upload error:", uploadResponse.error);
-        setSubmissionStatus("Error uploading image");
+        if (uploadResponse.error) {
+          console.error("File upload error:", uploadResponse.error);
+          setSubmissionStatus("Error uploading image");
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Get the public URL for the uploaded file
+        const { data } = supabase.storage
+          .from('room-images')
+          .getPublicUrl(fileName);
+
+        if (!data?.publicUrl) {
+          console.error("Error fetching public URL");
+          setSubmissionStatus("Error fetching image URL");
+          setIsSubmitting(false);
+          return;
+        }
+
+        newImageUrls.push(data.publicUrl);
+      }
+
+      // Step 2: Prepare final image URLs (keep existing ones not marked for removal + add new ones)
+      const finalImageUrls = [
+        ...existingImages.filter(url => !imagesToRemove.includes(url)),
+        ...newImageUrls
+      ];
+
+      // Step 3: Update room data in the database
+      const updateData: RoomUpdateData = {
+        description: currentFormData.description,
+        price: currentFormData.price,
+        state: currentFormData.state,
+        district: currentFormData.district,
+        locality: currentFormData.locality,
+        address: currentFormData.address,
+        latitude: currentFormData.latitude,
+        longitude: currentFormData.longitude,
+        image_urls: finalImageUrls,
+        bhk_type: selectedBhkType,
+      };
+      
+      // Just before the supabase update call:
+      console.log("Submitting room update with coordinates:", {
+        latitude: updateData.latitude,
+        longitude: updateData.longitude
+      });
+      
+      const { error: updateError } = await supabase
+        .from('rooms')
+        .update(updateData)
+        .eq('id', roomId);
+
+      if (updateError) {
+        console.error("Error updating room:", updateError);
+        setSubmissionStatus("Error updating room details");
         setIsSubmitting(false);
         return;
       }
 
-      // Get the public URL for the uploaded file
-      const { data } = supabase.storage
-        .from('room-images')
-        .getPublicUrl(fileName);
+      setSubmissionStatus("Room updated successfully!");
 
-      if (!data?.publicUrl) {
-        console.error("Error fetching public URL");
-        setSubmissionStatus("Error fetching image URL");
-        setIsSubmitting(false);
-        return;
-      }
-
-      newImageUrls.push(data.publicUrl);
-    }
-
-    // Step 2: Prepare final image URLs (keep existing ones not marked for removal + add new ones)
-    const finalImageUrls = [
-      ...existingImages.filter(url => !imagesToRemove.includes(url)),
-      ...newImageUrls
-    ];
-
-    // Step 3: Update room data in the database
-    const updateData: RoomUpdateData = {
-      description: formData.description,
-      price: formData.price,
-      state: formData.state,
-      district: formData.district,
-      locality: formData.locality,
-      address: formData.address,
-      latitude: formData.latitude,
-      longitude: formData.longitude,
-      image_urls: finalImageUrls,
-      bhk_type: selectedBhkType,
-    };
-
-    const { error: updateError } = await supabase
-      .from('rooms')
-      .update(updateData)
-      .eq('id', roomId);
-
-    if (updateError) {
-      console.error("Error updating room:", updateError);
-      setSubmissionStatus("Error updating room details");
+      // Redirect to the room page after a brief delay
+      setTimeout(() => {
+        router.push(`/rooms/${roomId}`);
+      }, 1500);
+    } catch (error) {
+      console.error("Error in update process:", error);
+      setSubmissionStatus("An unexpected error occurred");
       setIsSubmitting(false);
-      return;
     }
-
-    setSubmissionStatus("Room updated successfully!");
-
-    // Redirect to the room page after a brief delay
-    setTimeout(() => {
-      router.push(`/rooms/${roomId}`);
-    }, 1500);
   };
 
   return (
@@ -345,7 +437,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
             value={selectedBhkType}
             onValueChange={(value) => {
               setSelectedBhkType(value);
-              setFormData({ ...formData, bhkType: value });
+              setFormData(prev => ({ ...prev, bhkType: value }));
             }}
           >
             <SelectTrigger>
@@ -369,9 +461,17 @@ export function EditRoomForm({ roomId }: EditPageProps) {
             <Select
               value={selectedState}
               onValueChange={(value) => {
+                console.log("State changed to:", value);
                 setSelectedState(value);
                 setSelectedDistrict('');
-                setFormData(prev => ({ ...prev, state: value, district: '' }));
+                setFormData(prev => ({
+                  ...prev,
+                  state: value,
+                  district: '',
+                  // Reset coordinates when state changes
+                  latitude: null,
+                  longitude: null
+                }));
               }}
             >
               <SelectTrigger>
@@ -394,8 +494,30 @@ export function EditRoomForm({ roomId }: EditPageProps) {
               value={selectedDistrict}
               disabled={!selectedState}
               onValueChange={(value) => {
+                console.log("District changed to:", value);
                 setSelectedDistrict(value);
-                setFormData(prev => ({ ...prev, district: value }));
+                setFormData(prev => {
+                  // Update district immediately
+                  const updated = { ...prev, district: value };
+                  console.log("Updated form with district:", updated);
+                  return updated;
+                });
+                
+                // Now that district is set, we can fetch coordinates
+                // Use a slight delay to ensure state update has completed
+                setTimeout(async () => {
+                  if (selectedState && value) {
+                    console.log("Getting coordinates after district change");
+                    const coordsResult = await fetchLatLng(selectedState, value, formData.locality);
+                    if (coordsResult) {
+                      setFormData(prev => ({
+                        ...prev,
+                        latitude: coordsResult.lat,
+                        longitude: coordsResult.lng
+                      }));
+                    }
+                  }
+                }, 100);
               }}
             >
               <SelectTrigger>
@@ -419,15 +541,22 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           <Input
             placeholder="e.g. Andheri West"
             value={formData.locality}
-            onChange={e => setFormData({ ...formData, locality: e.target.value })}
-            onBlur={async () => {
-              if (formData.state && formData.district && formData.locality) {
-                const result = await fetchLatLng(formData.state, formData.district, formData.locality);
-                if (result) {
+            onChange={e => {
+              setFormData(prev => ({ ...prev, locality: e.target.value }));
+            }}
+            onBlur={async (e) => {
+              console.log("Locality input blurred with value:", e.target.value);
+              
+              // Directly update coordinates if we have state and district
+              if (selectedState && selectedDistrict) {
+                const localityValue = e.target.value;
+                console.log("Getting coordinates after locality change");
+                const coordsResult = await fetchLatLng(selectedState, selectedDistrict, localityValue);
+                if (coordsResult) {
                   setFormData(prev => ({
                     ...prev,
-                    latitude: result.lat,
-                    longitude: result.lng,
+                    latitude: coordsResult.lat,
+                    longitude: coordsResult.lng
                   }));
                 }
               }
@@ -442,9 +571,14 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           <Input
             placeholder="e.g. 123, XYZ Apartment"
             value={formData.address}
-            onChange={e => setFormData({ ...formData, address: e.target.value })}
+            onChange={e => setFormData(prev => ({ ...prev, address: e.target.value }))}
           />
         </div>
+
+        {/* Debug view for coordinates - uncomment if needed */}
+        {/* <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+          Debug: Coordinates: Lat: {formData.latitude}, Lng: {formData.longitude}
+        </div> */}
 
         {/* Existing Images */}
         {existingImages.length > 0 && (
@@ -454,7 +588,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
               {existingImages.map((url, index) => (
                 <div key={index} className="relative w-1/3 sm:w-1/4 md:w-1/5">
                   <div className={`relative aspect-square ${imagesToRemove.includes(url) ? 'opacity-30' : ''}`}>
-                    {/* Replace <img> with Next.js Image component */}
                     <div className="relative h-full w-full">
                       <Image
                         src={url}
@@ -468,9 +601,8 @@ export function EditRoomForm({ roomId }: EditPageProps) {
                   <button
                     type="button"
                     onClick={() => toggleImageRemoval(url)}
-                    className={`absolute top-2 right-2 p-1 rounded-full ${
-                      imagesToRemove.includes(url) ? 'bg-green-500' : 'bg-red-500'
-                    } text-white text-xs`}
+                    className={`absolute top-2 right-2 p-1 rounded-full ${imagesToRemove.includes(url) ? 'bg-green-500' : 'bg-red-500'
+                      } text-white text-xs`}
                   >
                     {imagesToRemove.includes(url) ? 'Keep' : 'Remove'}
                   </button>
