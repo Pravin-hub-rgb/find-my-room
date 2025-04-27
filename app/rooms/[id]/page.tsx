@@ -1,7 +1,6 @@
 // app/rooms/[id]/page.tsx
 import { getRoomById } from '@/lib/getRoomById';
 import RoomPageContent from './RoomPageContent';
-import ReviewsSection from '@/components/ReviewSection';
 interface RoomPageProps {
   params: Promise<{ id: string }> | { id: string };
 }

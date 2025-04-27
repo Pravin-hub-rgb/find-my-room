@@ -64,8 +64,8 @@ const EditProfile = () => {
           district: data?.district ?? '',
         });
         setLoading(false);
-      } catch (err: any) {
-        console.error('Error fetching profile:', err.message);
+      } catch (err: unknown) {
+        console.error('Error fetching profile:', err instanceof Error ? err.message : 'Unknown error');
         setError('An error occurred while fetching your profile.');
         setLoading(false);
       }
@@ -110,8 +110,8 @@ const EditProfile = () => {
       setTimeout(() => {
         router.push('/profile');
       }, 1000);
-    } catch (err: any) {
-      console.error('Error updating profile:', err.message);
+    } catch (err: unknown) {
+      console.error('Error updating profile:', err instanceof Error ? err.message : 'Unknown error');
       setError('An error occurred while updating your profile.');
       setLoading(false);
     }

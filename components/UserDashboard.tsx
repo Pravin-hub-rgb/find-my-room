@@ -1,16 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useSession } from '../lib/useSession'; // Assuming this is in the 'lib' folder
 import { supabase } from '../lib/supabaseClient';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Link from 'next/link';
-import StarRating from './StarRating';
 import RoomCard from './RoomCard';
+
+interface Room {
+    id: string;
+    image_urls: string[];    // Array of image URLs
+    district: string;        // District name
+    state: string;           // State name
+    price: number;           // Price of the room
+    bhk_type: string;        // Type of the room (e.g., 1BHK, 2BHK, etc.)
+    created_at: string;      // Timestamp of when the room was created
+    profiles?: { name: string }; // Optional profile information
+}
 
 const UserDashboard = () => {
     const { session, loading } = useSession();
-    const [rooms, setRooms] = useState<any[]>([]);
+    const [rooms, setRooms] = useState<Room[]>([]);
 
     useEffect(() => {
         if (!session) return; // Exit if no session
@@ -39,7 +47,7 @@ const UserDashboard = () => {
             {/* Heading Section */}
             <div className="mb-6">
                 <h2 className="text-2xl font-semibold text-gray-800">Your Posted Rooms</h2>
-                <p className="text-sm text-gray-500">Here are the rooms you've posted so far.</p>
+                <p className="text-sm text-gray-500">Here are the rooms you&apos;ve posted so far.</p>
             </div>
 
             {/* Room Cards */}
@@ -51,7 +59,6 @@ const UserDashboard = () => {
                             No rooms posted yet. Want to post a room?
                         </Link>
                     </Button>
-
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">

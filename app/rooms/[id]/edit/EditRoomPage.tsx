@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import Image from 'next/image' // Added Next.js Image component
 import {
   Select,
   SelectContent,
@@ -36,12 +37,7 @@ interface RoomUpdateData {
 // This is the exported client component that will be used by the server page component
 export function EditRoomForm({ roomId }: EditPageProps) {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [room, setRoom] = useState<any>(null);
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState('');
-  // Add explicit state variable for bhk type
-  const [selectedBhkType, setSelectedBhkType] = useState<string>('');
+  // We'll keep these variables since they're used in the component
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
@@ -49,6 +45,9 @@ export function EditRoomForm({ roomId }: EditPageProps) {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedBhkType, setSelectedBhkType] = useState<string>('');
 
   const [formData, setFormData] = useState({
     description: '',
@@ -90,7 +89,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         router.push('/auth/login');
         return;
       }
-      setUserId(userData.user.id);
       
       // Fetch room data
       try {
@@ -113,19 +111,10 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           return;
         }
         
-        // Set the room data
-        setRoom(roomData);
-        
-        // Debug logs
-        console.log("Fetched room data:", roomData);
-        console.log("BHK type from DB:", roomData.bhk_type);
-        
         // Map the values from database
         const mappedBhkType = roomData.bhk_type || '';
         
-        // Make sure these values exactly match your SelectItem values
-        console.log("Setting BHK type to:", mappedBhkType);
-        
+        // Set state values
         setSelectedBhkType(mappedBhkType);
         setSelectedState(roomData.state || '');
         setSelectedDistrict(roomData.district || '');
@@ -316,10 +305,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     }, 1500);
   };
 
-  // For debugging - remove in production
-  console.log("Current form data:", formData);
-  console.log("Selected BHK type:", selectedBhkType);
-
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow space-y-6">
       <h1 className="text-3xl font-semibold text-gray-800">Edit Room</h1>
@@ -359,7 +344,6 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           <Select
             value={selectedBhkType}
             onValueChange={(value) => {
-              console.log("Changing BHK type to:", value);
               setSelectedBhkType(value);
               setFormData({ ...formData, bhkType: value });
             }}
@@ -462,84 +446,92 @@ export function EditRoomForm({ roomId }: EditPageProps) {
           />
         </div>
 
-       {/* Existing Images */}
-{/* Existing Images */}
-{existingImages.length > 0 && (
-  <div>
-    <label className="block mb-2 font-medium text-gray-700">Existing Images</label>
-    <div className="flex flex-wrap gap-2">
-      {existingImages.map((url, index) => (
-        <div key={index} className="relative w-1/3 sm:w-1/4 md:w-1/5">
-          <div className={`relative aspect-square ${imagesToRemove.includes(url) ? 'opacity-30' : ''}`}>
-            <img
-              src={url}
-              alt={`Room image ${index + 1}`}
-              className="h-full w-full object-cover rounded-md"
-            />
+        {/* Existing Images */}
+        {existingImages.length > 0 && (
+          <div>
+            <label className="block mb-2 font-medium text-gray-700">Existing Images</label>
+            <div className="flex flex-wrap gap-2">
+              {existingImages.map((url, index) => (
+                <div key={index} className="relative w-1/3 sm:w-1/4 md:w-1/5">
+                  <div className={`relative aspect-square ${imagesToRemove.includes(url) ? 'opacity-30' : ''}`}>
+                    {/* Replace <img> with Next.js Image component */}
+                    <div className="relative h-full w-full">
+                      <Image
+                        src={url}
+                        alt={`Room image ${index + 1}`}
+                        fill
+                        sizes="(max-width: 768px) 33vw, 20vw"
+                        className="object-cover rounded-md"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleImageRemoval(url)}
+                    className={`absolute top-2 right-2 p-1 rounded-full ${
+                      imagesToRemove.includes(url) ? 'bg-green-500' : 'bg-red-500'
+                    } text-white text-xs`}
+                  >
+                    {imagesToRemove.includes(url) ? 'Keep' : 'Remove'}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => toggleImageRemoval(url)}
-            className={`absolute top-2 right-2 p-1 rounded-full ${imagesToRemove.includes(url) ? 'bg-green-500' : 'bg-red-500'
-              } text-white text-xs`}
+        )}
+
+        {/* Add New Images */}
+        <div>
+          <label className="block font-medium text-gray-700 mb-1">Upload New Images</label>
+
+          <label
+            htmlFor="image-upload"
+            className="flex items-center justify-center h-32 border-2 border-dashed border-gray-400 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
           >
-            {imagesToRemove.includes(url) ? 'Keep' : 'Remove'}
-          </button>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Click to upload or drag & drop images here</p>
+              <p className="text-xs text-gray-400">Only image files are supported</p>
+            </div>
+          </label>
+
+          <input
+            id="image-upload"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
-      ))}
-    </div>
-  </div>
-)}
 
-{/* Add New Images */}
-<div>
-  <label className="block font-medium text-gray-700 mb-1">Upload New Images</label>
-
-  <label
-    htmlFor="image-upload"
-    className="flex items-center justify-center h-32 border-2 border-dashed border-gray-400 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
-  >
-    <div className="text-center">
-      <p className="text-sm text-gray-600">Click to upload or drag & drop images here</p>
-      <p className="text-xs text-gray-400">Only image files are supported</p>
-    </div>
-  </label>
-
-  <input
-    id="image-upload"
-    type="file"
-    accept="image/*"
-    multiple
-    onChange={handleFileChange}
-    className="hidden"
-  />
-</div>
-
-{/* New Image Previews */}
-{imageFiles.length > 0 && (
-  <div className="mt-4 flex flex-wrap gap-2">
-    {imageFiles.map((file, index) => (
-      <div key={index} className="relative w-1/3 sm:w-1/4 md:w-1/5">
-        <img
-          src={URL.createObjectURL(file)}
-          alt={`Preview ${index + 1}`}
-          className="object-cover w-full h-full rounded-md"
-        />
-        <button
-          type="button"
-          onClick={() => {
-            const newFiles = imageFiles.filter((_, i) => i !== index);
-            setImageFiles(newFiles);
-          }}
-          className="absolute top-1 right-1 bg-red-600 text-white rounded-full text-xs px-2 py-1 hover:bg-red-700"
-        >
-          ✕
-        </button>
-      </div>
-    ))}
-  </div>
-)}
-
+        {/* New Image Previews */}
+        {imageFiles.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {imageFiles.map((file, index) => (
+              <div key={index} className="relative w-1/3 sm:w-1/4 md:w-1/5 aspect-square">
+                <div className="relative h-full w-full">
+                  <Image
+                    src={URL.createObjectURL(file)}
+                    alt={`Preview ${index + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 33vw, 20vw"
+                    className="object-cover rounded-md"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newFiles = imageFiles.filter((_, i) => i !== index);
+                    setImageFiles(newFiles);
+                  }}
+                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full text-xs px-2 py-1 hover:bg-red-700"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {formErrors.images && <p className="text-red-600 text-sm mt-1">{formErrors.images}</p>}
 

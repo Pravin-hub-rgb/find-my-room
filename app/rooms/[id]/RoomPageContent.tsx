@@ -11,11 +11,34 @@ import { useRouter } from 'next/navigation';
 import ContactOwner from '@/components/ContactOwner';
 import ReviewsSection from '@/components/ReviewSection';
 import StarRating from '@/components/StarRating';
+import { Room } from '@/types/room'; // Import the base Room type
+
+// Extend the Room type with additional properties needed in this component
+interface ExtendedRoom extends Room {
+  user_id: string;
+  bhk_type?: string;
+  profiles?: {
+    name: string;
+  };
+}
+
+// Define proper type for reviews
+interface Review {
+  id: string;
+  user_id: string;
+  room_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  profiles?: {
+    name: string;
+  };
+}
 
 interface RoomPageContentProps {
-  room: any;
+  room: ExtendedRoom;
   id: string;
-  reviews: any[];  // <-- Add this
+  reviews: Review[];
 }
 
 export default function RoomPageContent({ room, id, reviews }: RoomPageContentProps) {
@@ -166,13 +189,15 @@ export default function RoomPageContent({ room, id, reviews }: RoomPageContentPr
             </div>
           </div>
           <div className="space-y-2">
-            <p><strong>Posted on:</strong> {new Date(room.created_at).toLocaleDateString()}</p>
+            {room.created_at && (
+              <p><strong>Posted on:</strong> {new Date(room.created_at).toLocaleDateString()}</p>
+            )}
             <p><strong>Posted by:</strong> {room.profiles?.name || 'Unknown User'}</p>
           </div>
         </div>
         <div className="mt-6">
           <h3 className="font-medium mb-2">Description</h3>
-          <p className="text-gray-700">{room.description}</p>
+          <p className="text-gray-700">{room.description || 'No description available'}</p>
         </div>
         {/* Contact the Owner Button */}
         <div className="mt-6">
@@ -180,11 +205,15 @@ export default function RoomPageContent({ room, id, reviews }: RoomPageContentPr
         </div>
       </div>
       <ReviewsSection roomId={id} initialReviews={reviews} />
-      {/* Map */}
-      {room.latitude && room.longitude ? (
+      {/* Map - Only render MapWrapper when latitude and longitude are defined */}
+      {room.latitude !== null && room.longitude !== null ? (
         <div className="h-[400px] w-full rounded-lg overflow-hidden shadow-sm">
           <h2 className="text-xl font-semibold mb-2">Location</h2>
-          <MapWrapper room={room} />
+          <MapWrapper room={{
+            ...room,
+            latitude: room.latitude,
+            longitude: room.longitude
+          } as Room & { latitude: number; longitude: number }} />
         </div>
       ) : (
         <p>No location data available</p>

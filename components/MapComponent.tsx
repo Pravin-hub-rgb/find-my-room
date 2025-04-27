@@ -6,23 +6,41 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Room } from '@/types/room';
 
-interface MapComponentProps {
-    rooms: Array<Room & { latitude: number; longitude: number }>;
+// Extend the default icon options interface
+interface CustomIconOptions extends L.IconOptions {
+  iconRetinaUrl: string;
+  iconUrl: string;
+  shadowUrl: string;
+}
+
+// Type augmentation for Leaflet's Icon prototype
+declare module 'leaflet' {
+  interface Icon {
+    _getIconUrl?: string;
   }
+}
+
+interface MapComponentProps {
+  rooms: Array<Room & { latitude: number; longitude: number }>;
+}
 
 export default function MapComponent({ rooms }: MapComponentProps) {
   // Fix Leaflet default icon issue
   useEffect(() => {
-    // Fix the icon paths issue
-    // Using a type assertion to address the TypeScript error
-    const icon = L.Icon.Default.prototype as any;
-    delete icon._getIconUrl;
-    
-    L.Icon.Default.mergeOptions({
+    // Create a type-safe way to handle the icon options
+    const iconOptions: CustomIconOptions = {
       iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
       iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    });
+    };
+
+    // Type-safe check and delete of _getIconUrl
+    const defaultIconProto = L.Icon.Default.prototype;
+    if (defaultIconProto._getIconUrl) {
+      delete defaultIconProto._getIconUrl;
+    }
+
+    L.Icon.Default.mergeOptions(iconOptions);
   }, []);
 
   // Center of India

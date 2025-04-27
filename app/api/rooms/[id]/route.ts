@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-export async function DELETE(
-  request: Request,
-  context: { params: { id: string } }
-) {
-  const { id } = await Promise.resolve(context.params);
+export async function DELETE(request: Request) {
+  // Extract ID from URL path
+  const path = new URL(request.url).pathname;
+  const id = path.split('/').pop();
   
-  // Regular authentication checks using the normal client...
+  // Regular authentication checks
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Unauthorized: Missing or invalid authorization header' }, { status: 401 });

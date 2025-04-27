@@ -1,11 +1,24 @@
 'use client';
-
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Image from 'next/image';
 
-export default function RoomDetails({ room }: { room: any }) {
-  const images = room.image_urls ?? [room.image_url];
+// Define a proper type for the room object
+interface Room {
+  title?: string;
+  description: string;
+  room_type?: string;
+  price: number | string;
+  locality: string;
+  district: string;
+  state: string;
+  image_urls?: string[];
+  image_url?: string;
+}
 
+export default function RoomDetails({ room }: { room: Room }) {
+  // Make sure we have an array of strings with no undefined values
+  const images: string[] = room.image_urls || (room.image_url ? [room.image_url] : []);
+  
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-2">{room.title}</h1>
@@ -13,7 +26,6 @@ export default function RoomDetails({ room }: { room: any }) {
       <p><strong>Type:</strong> {room.room_type}</p>
       <p><strong>Price:</strong> ₹{room.price}</p>
       <p><strong>Location:</strong> {room.locality}, {room.district}, {room.state}</p>
-
       {images.length > 0 && (
         <Tabs defaultValue="0" className="mt-6 w-full">
           {images.map((url: string, index: number) => (
@@ -30,7 +42,6 @@ export default function RoomDetails({ room }: { room: any }) {
               />
             </TabsContent>
           ))}
-
           <TabsList className="mt-4 flex justify-center gap-2">
             {images.map((_, index: number) => (
               <TabsTrigger

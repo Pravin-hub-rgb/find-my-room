@@ -1,15 +1,10 @@
-// app/rooms/[id]/edit/page.tsx
-import { EditRoomForm } from "./EditRoomPage";// Import from separate file
+import { EditRoomForm } from "./EditRoomPage";
 
-interface EditRoomPageProps {
-  params: Promise<{ id: string }> | { id: string };
+interface PageProps {
+  params: Promise<{ [key: string]: string }>;
 }
 
-export default async function EditRoomPage({ params }: EditRoomPageProps) {
-  // Await the params object before accessing its properties
-  const resolvedParams = await params;
-  const id = resolvedParams.id;
-  
-  // Pass the resolved ID to the client component
-  return <EditRoomForm roomId={id} />;
+export default async function EditRoomPage({ params }: PageProps) {
+  const paramsValue = await params;
+  return <EditRoomForm roomId={paramsValue.id} />;
 }

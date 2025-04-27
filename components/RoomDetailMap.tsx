@@ -4,24 +4,34 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Room } from '@/types/room';
+import type L from 'leaflet';
+
+// Type augmentation for Leaflet's Icon prototype
+declare module 'leaflet' {
+  interface Icon {
+    _getIconUrl?: string;
+  }
+}
 
 interface RoomDetailMapProps {
   room: Room & { latitude: number; longitude: number };
 }
 
 export default function RoomDetailMap({ room }: RoomDetailMapProps) {
-  const [L, setL] = useState<any>(null);
+  const [leaflet, setLeaflet] = useState<typeof L | null>(null);
 
   useEffect(() => {
     // Import leaflet dynamically on the client side
-    import('leaflet').then((leaflet) => {
-      setL(leaflet.default);
+    import('leaflet').then((module) => {
+      const L = module.default;
+      setLeaflet(L);
       
       // Fix Leaflet default icon issue
-      const icon = leaflet.default.Icon.Default.prototype as any;
-      delete icon._getIconUrl;
+      if (L.Icon.Default.prototype._getIconUrl) {
+        delete L.Icon.Default.prototype._getIconUrl;
+      }
       
-      leaflet.default.Icon.Default.mergeOptions({
+      L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
         iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -29,7 +39,13 @@ export default function RoomDetailMap({ room }: RoomDetailMapProps) {
     });
   }, []);
 
-  if (!L) return <div className="h-[400px] w-full bg-gray-100 flex items-center justify-center">Loading map...</div>;
+  if (!leaflet) {
+    return (
+      <div className="h-[400px] w-full bg-gray-100 flex items-center justify-center">
+        Loading map...
+      </div>
+    );
+  }
 
   return (
     <MapContainer

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 import {
   Select,
@@ -21,6 +22,8 @@ const PostRoomPage = () => {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedState, setSelectedState] = useState('');
+  // Since we're using it in the districts variable below, not removing it
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -84,16 +87,7 @@ const PostRoomPage = () => {
 
   if (loading) return <div>Checking authentication...</div>;
 
-  // Handle image file changes
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files && files.length > 0) {
-      setFormData(prev => ({
-        ...prev,
-        images: Array.from(files)
-      }))
-    }
-  }
+  // Removing unused handleImageChange function
 
   // Handle file changes, check file size
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -411,14 +405,15 @@ const PostRoomPage = () => {
           {formErrors.images && <p className="text-red-600 text-sm mt-1">{formErrors.images}</p>}
 
           {/* Image Previews */}
-          {/* Image Previews */}
           <div className="mt-4 flex flex-wrap gap-3">
             {imageFiles.length > 0 && imageFiles.map((file, index) => (
               <div key={index} className="relative w-32 h-32">
-                <img
+                <Image
                   src={URL.createObjectURL(file)}
                   alt={`Preview ${index + 1}`}
-                  className="object-cover w-full h-full rounded-md"
+                  className="object-cover rounded-md"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 128px"
                 />
                 <button
                   type="button"

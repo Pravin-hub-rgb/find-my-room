@@ -1,13 +1,33 @@
-// components/RecentRooms.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import RoomCard from './RoomCard'
 
+interface Review {
+  rating: number;
+}
+
+interface RoomWithRelations {
+  id: string;
+  image_urls: string[];
+  district: string;
+  state: string;
+  price: number;
+  bhk_type: string;
+  created_at: string;
+  profiles?: {
+    name: string;
+  };
+  reviews?: Review[];
+  // Add other room properties as needed
+  title?: string;
+  locality?: string;
+  room_type?: string;
+}
+
 export default function RecentRooms() {
-  const [rooms, setRooms] = useState<any[]>([])
+  const [rooms, setRooms] = useState<RoomWithRelations[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -16,7 +36,7 @@ export default function RecentRooms() {
 
       const { data, error } = await supabase
         .from('rooms')
-        .select('*, profiles(name), reviews(rating)') // <-- Fetch reviews' ratings
+        .select('*, profiles(name), reviews(rating)')
         .order('created_at', { ascending: false })
         .limit(6)
 
@@ -27,6 +47,7 @@ export default function RecentRooms() {
           (data || []).map((room) => ({
             ...room,
             image_urls: Array.isArray(room.image_urls) ? room.image_urls : [],
+            bhk_type: room.bhk_type || '', // Ensure bhk_type exists
           }))
         )
       }
