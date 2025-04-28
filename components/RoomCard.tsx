@@ -44,10 +44,16 @@ const RoomCard: FC<RoomCardProps> = ({ room }) => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="absolute left-2 h-8 w-8 bg-white/70 hover:bg-white" />
-          <CarouselNext className="absolute right-2 h-8 w-8 bg-white/70 hover:bg-white" />
+
+          {room.image_urls.length > 1 && (
+            <>
+              <CarouselPrevious className="absolute left-2 h-8 w-8 bg-white/70 hover:bg-white" />
+              <CarouselNext className="absolute right-2 h-8 w-8 bg-white/70 hover:bg-white" />
+            </>
+          )}
         </Carousel>
       </div>
+
       <div className="p-4 flex flex-col flex-grow">
         {/* Top Row: Price and BHK Type */}
         <div className="flex justify-between items-center mb-2">
