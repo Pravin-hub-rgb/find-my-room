@@ -197,11 +197,11 @@ export default function ReviewsSection({ roomId, initialReviews }: ReviewsSectio
             <p>You&apos;ve already reviewed this room. Thank you for your feedback!</p>
           </div>
         ) : (
-          <div className="review-form mt-8 border rounded-md p-6 bg-gray-50">
+          <div className="review-form mt-3 border rounded-md p-3 bg-gray-50">
             <h4 className="text-lg font-semibold mb-4">Leave a Review</h4>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-gray-700">Your Rating</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Your Rating</label>
               <div className="flex items-center gap-2">
                 <div className="flex space-x-1">
                   {[1, 2, 3, 4, 5].map((star) => (

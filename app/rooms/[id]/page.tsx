@@ -18,7 +18,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-1">
       <RoomPageContent room={room} id={id} reviews={reviews} />
     </div>
   );

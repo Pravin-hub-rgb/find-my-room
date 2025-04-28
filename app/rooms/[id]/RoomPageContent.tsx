@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import ContactOwner from '@/components/ContactOwner';
 import ReviewsSection from '@/components/ReviewSection';
 import StarRating from '@/components/StarRating';
-import { Room } from '@/types/room'; // Import the base Room type
+import { Room } from '@/types/room';
 
 // Extend the Room type with additional properties needed in this component
 interface ExtendedRoom extends Room {
@@ -46,6 +46,13 @@ export default function RoomPageContent({ room, id, reviews }: RoomPageContentPr
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const router = useRouter();
+
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
+  const descriptionWords = room.description ? room.description.split(' ') : [];
+  const isDescriptionLong = descriptionWords.length > 80;
+  const shortDescription = descriptionWords.slice(0, 80).join(' ') + '...';
+
 
   useEffect(() => {
     async function checkOwnership() {
@@ -99,7 +106,7 @@ export default function RoomPageContent({ room, id, reviews }: RoomPageContentPr
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
+    <div className="p-2 max-w-5xl mx-auto space-y-8">
       {/* Header with edit button */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Room Details</h1>
@@ -174,41 +181,73 @@ export default function RoomPageContent({ room, id, reviews }: RoomPageContentPr
       )}
 
       {/* Room Info */}
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Room Information</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <div className="mb-4">
-              <p className="font-bold text-lg text-blue-600">₹{room.price}</p>
-              <p className="text-gray-700 font-medium"><strong>Type: </strong>{room.bhk_type || 'Room'}</p>
-              <StarRating roomId={room.id} />
+      <div className="bg-white p-5 rounded-2xl shadow-md space-y-8">
+        <h2 className="text-2xl font-bold text-gray-800 border-b pb-4">Room Information</h2>
+
+        {/* Basic Details */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <div>
+              <p className="text-2xl font-bold text-blue-600">₹{room.price}</p>
+              <p className="text-gray-700 text-lg">
+                <span className="font-semibold">Type:</span> {room.bhk_type || 'Room'}
+              </p>
+              <div className="mt-2">
+                <StarRating roomId={room.id} />
+              </div>
             </div>
-            <div className="space-y-2">
-              <p><strong>Location:</strong> {room.locality}, {room.district}, {room.state}</p>
-              {room.address && <p><strong>Address:</strong> {room.address}</p>}
+
+            <div className="space-y-2 text-gray-700">
+              <p><span className="font-semibold">Location:</span> {room.locality}, {room.district}, {room.state}</p>
+              {room.address && (
+                <p><span className="font-semibold">Address:</span> {room.address}</p>
+              )}
             </div>
           </div>
-          <div className="space-y-2">
+
+          <div className="space-y-4 text-gray-700">
             {room.created_at && (
-              <p><strong>Posted on:</strong> {new Date(room.created_at).toLocaleDateString()}</p>
+              <p><span className="font-semibold">Posted on:</span> {new Date(room.created_at).toLocaleDateString()}</p>
             )}
-            <p><strong>Posted by:</strong> {room.profiles?.name || 'Unknown User'}</p>
+            <p><span className="font-semibold">Posted by:</span> {room.profiles?.name || 'Unknown User'}</p>
           </div>
         </div>
-        <div className="mt-6">
-          <h3 className="font-medium mb-2">Description</h3>
-          <p className="text-gray-700">{room.description || 'No description available'}</p>
+
+        {/* Description */}
+        <div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-1">Description</h3>
+          <p className="text-gray-700 leading-relaxed">
+            {room.description ? (
+              isDescriptionLong ? (
+                showFullDescription ? room.description : shortDescription
+              ) : (
+                room.description
+              )
+            ) : (
+              'No description available'
+            )}
+          </p>
+          {isDescriptionLong && (
+            <button
+              onClick={() => setShowFullDescription(!showFullDescription)}
+              className="mt-1 text-blue-600 hover:underline font-medium"
+            >
+              {showFullDescription ? 'Show Less' : 'Read More'}
+            </button>
+          )}
         </div>
-        {/* Contact the Owner Button */}
-        <div className="mt-6">
+
+        {/* Contact Owner */}
+        <div className="pt-4 border-t">
           <ContactOwner user_id={room.user_id} />
         </div>
       </div>
+
       <ReviewsSection roomId={id} initialReviews={reviews} />
       {/* Map - Only render MapWrapper when latitude and longitude are defined */}
       {room.latitude !== null && room.longitude !== null ? (
         <div className="h-[400px] w-full rounded-lg overflow-hidden shadow-sm">
-          <h2 className="text-xl font-semibold mb-2">Location</h2>
+          <h2 className="text-xl font-semibold mb-2 px-3">Location</h2>
           <MapWrapper room={{
             ...room,
             latitude: room.latitude,
