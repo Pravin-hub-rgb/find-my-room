@@ -64,7 +64,7 @@ export default function RoomDetailMap({ room }: RoomDetailMapProps) {
             <h3 className="font-bold">{room.title}</h3>
             <p>{room.locality}, {room.district}, {room.state}</p>
             {room.price && <p>₹{room.price}</p>}
-            <p>{room.room_type}</p>
+            <p>{room.bhk_type}</p>
           </div>
         </Popup>
       </Marker>
