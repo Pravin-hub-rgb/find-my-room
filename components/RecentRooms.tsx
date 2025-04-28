@@ -63,16 +63,16 @@ export default function RecentRooms() {
   return (
     <div className="p-6">
       <h2 className="text-xl font-semibold mb-4 flex items-center">Recently Posted Rooms <Image
-            src="/mainxx.png"
-            alt="Logo"
-            width={50}
-            height={50}
-          /> </h2>
+        src="/mainxx.png"
+        alt="Logo"
+        width={50}
+        height={50}
+      /> </h2>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-3 lg:grid-cols-4 lg:gap-4 mt-4">
           {rooms.map((room) => (
             <RoomCard key={room.id} room={room} />
           ))}

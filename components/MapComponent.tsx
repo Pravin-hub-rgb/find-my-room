@@ -5,6 +5,8 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Room } from '@/types/room';
+import Link from 'next/link';
+import { Button } from './ui/button';
 
 // Extend the default icon options interface
 interface CustomIconOptions extends L.IconOptions {
@@ -45,11 +47,11 @@ export default function MapComponent({ rooms }: MapComponentProps) {
 
   // Center of India
   const defaultCenter: [number, number] = [22.9734, 78.6569];
-  
+
   return (
-    <MapContainer 
-      center={defaultCenter} 
-      zoom={5} 
+    <MapContainer
+      center={defaultCenter}
+      zoom={5}
       style={{ height: '100%', width: '100%' }}
       scrollWheelZoom={true}
     >
@@ -57,24 +59,36 @@ export default function MapComponent({ rooms }: MapComponentProps) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      
+
       {rooms.map(room => (
-        <Marker 
+        <Marker
           key={room.id}
           position={[room.latitude, room.longitude]}
         >
-          <Popup>
-            <div className="max-w-xs">
-              <h3 className="font-bold text-lg">{room.title || 'Room'}</h3>
-              <p className="text-sm text-gray-600">{room.locality || ''} {room.district}, {room.state}</p>
-              {room.price && <p className="font-medium">₹{room.price}</p>}
-              {room.room_type && <p className="text-xs italic">{room.room_type}</p>}
-              <button 
-                className="mt-2 bg-blue-500 text-white px-4 py-1 rounded text-sm hover:bg-blue-600"
-                onClick={() => window.location.href = `/rooms/${room.id}`}
+          <Popup minWidth={150} maxWidth={200}>
+            <div className="py-1 px-2">
+              <div className="flex justify-between items-center">
+                <p className="font-bold text-sm">{room.bhk_type || 'Room'}</p>
+                {room.price && <p className="font-medium text-sm">₹{room.price}/mo</p>}
+              </div>
+              <p className="text-xs text-gray-600 mb-1">
+                {room.locality && room.locality.toLowerCase() !== room.district.toLowerCase()
+                  ? room.locality + ', '
+                  : ''}
+                {room.district}, {room.state}
+              </p>
+              <Button
+                asChild
+                className="w-full py-1 mt-1 bg-gray-700 hover:bg-gray-800 text-white font-bold text-xs h-auto"
               >
-                View Details
-              </button>
+                <Link
+                  className="text-white !text-white no-underline font-bold"
+                  href={`/rooms/${room.id}`}
+                  style={{ color: 'white !important', fontWeight: '700' }}
+                >
+                  View Details
+                </Link>
+              </Button>
             </div>
           </Popup>
         </Marker>

@@ -3,7 +3,7 @@ export interface Room {
     id: string;
     title?: string;
     description?: string;
-    room_type?: string;
+    bhk_type?: string;
     price?: number;
     state: string;
     district: string;
