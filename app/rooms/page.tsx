@@ -122,7 +122,7 @@ export default function RoomsPage() {
       <h1 className="text-2xl font-semibold mb-4">Browse Rooms</h1>
 
       <div className="lg:flex space-y-6 lg:space-y-0">
-        <div className="w-full lg:w-1/4 space-y-6">
+        <div className="w-full lg:w-1/4 space-y-6 shadow-sm p-3">
           <div className="flex flex-col space-y-4">
             <div className="flex flex-col sm:flex-row sm:space-x-2 lg:flex-col lg:space-x-0 lg:space-y-4">
               <div className="w-full mb-4 sm:mb-0 lg:mb-0">

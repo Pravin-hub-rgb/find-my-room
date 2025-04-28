@@ -125,46 +125,53 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="lg:hidden absolute top-16 right-6 bg-white p-4 shadow-md rounded-md w-48 z-40">
-          <Link href="/rooms" className="block py-2 text-sm hover:underline">
-            Browse Rooms
-          </Link>
-          <Link href="/post-room" className="block py-2 text-sm hover:underline">
-            Post a Room
-          </Link>
+        <div className="lg:hidden absolute top-16 right-6 bg-white p-4 shadow-md rounded-md w-38 z-40">
+          <div className="flex flex-col gap-2">
+            <Link href="/rooms" className="block text-sm hover:underline">
+              Browse Rooms
+            </Link>
+            <Link href="/post-room" className="block text-sm hover:underline">
+              Post a Room
+            </Link>
 
-          {user ? (
-            <>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => router.push('/profile')}
-                className="block w-full text-left py-2"
-              >
-                {profile?.name || user.email?.split('@')[0]}
-              </Button>
+            {user ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => router.push('/profile')}
+                  className="w-full text-left"
+                >
+                  {profile?.name || user.email?.split('@')[0]}
+                </Button>
 
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleLogout}
-                className="block w-full text-left py-2"
-              >
-                Logout
-              </Button>
-            </>
-          ) : (
-            <>
-              <Link href="/auth/login">
-                <Button size="sm" className="block w-full text-left py-2">Login</Button>
-              </Link>
-              <Link href="/auth/signup">
-                <Button variant="secondary" size="sm" className="block w-full text-left py-2">Signup</Button>
-              </Link>
-            </>
-          )}
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleLogout}
+                  className="w-full text-left"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button size="sm" className="w-full text-left">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/auth/signup">
+                  <Button variant="secondary" size="sm" className="w-full text-left">
+                    Signup
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       )}
+
     </nav>
   )
 }
