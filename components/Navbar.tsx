@@ -9,14 +9,14 @@ import { Button } from "@/components/ui/button"
 import type { User } from '@supabase/supabase-js'
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-
+  const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<{ name: string; state: string; district: string }>({
     name: '',
     state: '',
     district: '',
   })
+
   const router = useRouter()
 
   useEffect(() => {
@@ -25,7 +25,6 @@ export default function Navbar() {
       if (data?.user) {
         setUser(data.user)
 
-        // Fetch updated profile fields: name, state, district
         const { data: profileData, error } = await supabase
           .from('profiles')
           .select('name, state, district')
@@ -71,15 +70,14 @@ export default function Navbar() {
         <span>Find My Room</span>
       </Link>
 
-      <div className="flex items-center gap-4 lg:flex hidden">
+      {/* Desktop Menu – visible on md and up */}
+      <div className="flex items-center gap-4 md:flex hidden">
         <Link href="/rooms" className="text-sm hover:underline">
           Browse Rooms
         </Link>
-
         <Link href="/post-room" className="text-sm hover:underline">
           Post a Room
         </Link>
-
         {user ? (
           <>
             <Button
@@ -89,7 +87,6 @@ export default function Navbar() {
             >
               {profile?.name || user.email?.split('@')[0]}
             </Button>
-
             <Button size="sm" variant="destructive" onClick={handleLogout}>
               Logout
             </Button>
@@ -106,8 +103,8 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Hamburger Menu for mobile */}
-      <div className="lg:hidden flex items-center">
+      {/* Hamburger – shown on screens below md */}
+      <div className="md:hidden flex items-center">
         <Button
           size="sm"
           variant="ghost"
@@ -123,9 +120,9 @@ export default function Navbar() {
         </Button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu – only visible below md */}
       {isOpen && (
-        <div className="lg:hidden absolute top-16 right-6 bg-white p-4 shadow-md rounded-md w-38 z-40">
+        <div className="md:hidden absolute top-16 right-6 bg-white p-4 shadow-md rounded-md w-38 z-40">
           <div className="flex flex-col gap-2">
             <Link href="/rooms" className="block text-sm hover:underline">
               Browse Rooms
@@ -133,7 +130,6 @@ export default function Navbar() {
             <Link href="/post-room" className="block text-sm hover:underline">
               Post a Room
             </Link>
-
             {user ? (
               <>
                 <Button
@@ -144,7 +140,6 @@ export default function Navbar() {
                 >
                   {profile?.name || user.email?.split('@')[0]}
                 </Button>
-
                 <Button
                   size="sm"
                   variant="destructive"
@@ -171,7 +166,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-
     </nav>
   )
 }

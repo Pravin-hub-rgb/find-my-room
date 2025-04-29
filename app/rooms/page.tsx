@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { statesAndDistricts } from '@/lib/statesAndDistricts';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,9 @@ interface Room {
     name: string;
   };
   created_at: string;
-  // Add other room properties as needed
 }
 
-const bhkTypes = ["1 RK", "Studio", "1 BHK", "2 BHK", "3 BHK", "Other"];
+const bhkTypes = ["1 RK", "PG", "Studio", "1 BHK", "2 BHK", "3 BHK", "Other"];
 
 export default function RoomsPage() {
   const [selectedState, setSelectedState] = useState('');
@@ -34,19 +33,99 @@ export default function RoomsPage() {
   const [maxPrice, setMaxPrice] = useState(10000);
   const [isUserLoading, setIsUserLoading] = useState(true);
 
-  const fetchRooms = useCallback(async (stateOverride?: string, districtOverride?: string) => {
-    const stateToUse = stateOverride || selectedState;
-    const districtToUse = districtOverride || selectedDistrict;
+  // Load user profile on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      setIsUserLoading(true);
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Auth session error:", error);
+          return;
+        }
 
-    if (!stateToUse || !districtToUse) return;
+        if (data.session?.user) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('state, district')
+            .eq('id', data.session.user.id)
+            .single();
+
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
+          } else if (profile?.state && profile?.district) {
+            setSelectedState(profile.state);
+            setSelectedDistrict(profile.district);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
+        setIsUserLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  // When state changes, update district list
+  useEffect(() => {
+    const stateData = statesAndDistricts.find(s => s.state === selectedState);
+    setDistricts(stateData ? stateData.districts : []);
+
+    if (!stateData?.districts.includes(selectedDistrict)) {
+      setSelectedDistrict('');
+    }
+  }, [selectedState, selectedDistrict]);
+
+  // Fetch rooms when filters change
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (!selectedState || !selectedDistrict) return;
+
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('rooms')
+          .select('*, profiles(name)')
+          .eq('state', selectedState)
+          .eq('district', selectedDistrict);
+
+        if (error) throw error;
+
+        const filteredRooms = (data || []).filter((room) => {
+          const isBhkTypeMatch = selectedBhkType ? room.bhk_type === selectedBhkType : true;
+          const isPriceMatch = room.price >= minPrice && room.price <= maxPrice;
+          return isBhkTypeMatch && isPriceMatch;
+        });
+
+        setRooms(filteredRooms.map(room => ({
+          ...room,
+          image_urls: Array.isArray(room.image_urls) ? room.image_urls : [],
+          locality: room.locality || 'Not specified'
+        })));
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (selectedState && selectedDistrict) {
+      fetchRooms();
+    }
+  }, [selectedState, selectedDistrict, selectedBhkType, minPrice, maxPrice]);
+
+  const handleFilterClick = async () => {
+    if (!selectedState || !selectedDistrict) return;
 
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('rooms')
         .select('*, profiles(name)')
-        .eq('state', stateToUse)
-        .eq('district', districtToUse);
+        .eq('state', selectedState)
+        .eq('district', selectedDistrict);
 
       if (error) throw error;
 
@@ -66,56 +145,7 @@ export default function RoomsPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedState, selectedDistrict, selectedBhkType, minPrice, maxPrice]);
-
-  useEffect(() => {
-    const loadProfileAndRooms = async () => {
-      setIsUserLoading(true);
-      try {
-        // Use getSession instead of getUser to handle missing session gracefully
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Auth session error:", error);
-          setIsUserLoading(false);
-          return;
-        }
-        
-        // Only proceed with profile fetching if we have a session and user
-        if (data.session?.user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('state, district')
-            .eq('id', data.session.user.id)
-            .single();
-
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-          } else if (profile?.state && profile?.district) {
-            setSelectedState(profile.state);
-            setSelectedDistrict(profile.district);
-
-            const stateData = statesAndDistricts.find(s => s.state === profile.state);
-            setDistricts(stateData ? stateData.districts : []);
-
-            await fetchRooms(profile.state, profile.district);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading profile:", error);
-      } finally {
-        setIsUserLoading(false);
-      }
-    };
-
-    loadProfileAndRooms();
-  }, [fetchRooms]);
-
-  useEffect(() => {
-    const stateData = statesAndDistricts.find(s => s.state === selectedState);
-    setDistricts(stateData ? stateData.districts : []);
-    setSelectedDistrict('');
-  }, [selectedState]);
+  };
 
   return (
     <div className="p-6">
@@ -164,14 +194,14 @@ export default function RoomsPage() {
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1">Select BHK Type</label>
+            <label className="block mb-1">Select Room Type</label>
             <select
               className="border px-3 py-2 w-full"
               value={selectedBhkType}
               onChange={(e) => setSelectedBhkType(e.target.value)}
               disabled={isUserLoading}
             >
-              <option value="">-- Choose BHK Type --</option>
+              <option value="">-- Choose Room Type --</option>
               {bhkTypes.map((bhk) => (
                 <option key={bhk} value={bhk}>
                   {bhk}
@@ -182,20 +212,20 @@ export default function RoomsPage() {
 
           <div className="mb-4">
             <label className="block mb-1">Price Range</label>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <input
                 type="number"
-                className="border px-3 py-2 w-1/3"
+                className="border px-3 py-2 w-[45%]"
                 placeholder="Min Price"
                 value={minPrice}
                 onChange={(e) => setMinPrice(Number(e.target.value))}
                 min="0"
                 disabled={isUserLoading}
               />
-              <span className="mx-2">to</span>
+              <span className="text-sm text-gray-500">to</span>
               <input
                 type="number"
-                className="border px-3 py-2 w-1/3"
+                className="border px-3 py-2 w-[45%]"
                 placeholder="Max Price"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
@@ -206,11 +236,11 @@ export default function RoomsPage() {
           </div>
 
           <Button 
-            onClick={() => fetchRooms()} 
+            onClick={handleFilterClick}
             disabled={!selectedDistrict || loading || isUserLoading} 
             className="w-full mb-4"
           >
-            {loading ? 'Loading...' : 'Fetch Rooms'}
+            {loading ? 'Loading...' : 'Apply Filters'}
           </Button>
         </div>
 

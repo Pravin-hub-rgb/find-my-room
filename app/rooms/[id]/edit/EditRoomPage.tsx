@@ -72,6 +72,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
   // BHK types array matching the create page
   const bhkTypes = [
     "1 RK",
+    "PG",
     "Studio",
     "1 BHK",
     "2 BHK",
@@ -251,14 +252,14 @@ export function EditRoomForm({ roomId }: EditPageProps) {
   // Update coordinates based on location data
   const updateLocationCoordinates = async (state: string, district: string, locality: string) => {
     console.log("updateLocationCoordinates called with:", { state, district, locality });
-    
+
     if (state && district) {
       console.log("Fetching new coordinates...");
       const result = await fetchLatLng(state, district, locality);
-      
+
       if (result) {
         console.log("Updating coordinates to:", { lat: result.lat, lng: result.lng });
-        
+
         // Using function form of setState to ensure we're working with the latest state
         setFormData(prev => {
           const updated = {
@@ -305,7 +306,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
     // Use the current formData state directly when creating updateData
     // This ensures we have the latest coordinates
     const currentFormData = { ...formData };
-    
+
     console.log("Current form data for submission:", currentFormData);
 
     // Step 1: Upload new images if any
@@ -362,13 +363,13 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         image_urls: finalImageUrls,
         bhk_type: selectedBhkType,
       };
-      
+
       // Just before the supabase update call:
       console.log("Submitting room update with coordinates:", {
         latitude: updateData.latitude,
         longitude: updateData.longitude
       });
-      
+
       const { error: updateError } = await supabase
         .from('rooms')
         .update(updateData)
@@ -429,7 +430,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
 
         {/* BHK Type */}
         <div>
-          <label className="block mb-1 font-medium text-gray-700">BHK Type</label>
+          <label className="block mb-1 font-medium text-gray-700">Room Type</label>
           <Select
             value={selectedBhkType}
             onValueChange={(value) => {
@@ -438,7 +439,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select BHK Type" />
+              <SelectValue placeholder="Select Room Type" />
             </SelectTrigger>
             <SelectContent>
               {bhkTypes.map((type) => (
@@ -499,7 +500,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
                   console.log("Updated form with district:", updated);
                   return updated;
                 });
-                
+
                 // Now that district is set, we can fetch coordinates
                 // Use a slight delay to ensure state update has completed
                 setTimeout(() => {
@@ -535,7 +536,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
             }}
             onBlur={(e) => {
               console.log("Locality input blurred with value:", e.target.value);
-              
+
               // Directly update coordinates if we have state and district
               if (selectedState && selectedDistrict) {
                 updateLocationCoordinates(selectedState, selectedDistrict, e.target.value);
