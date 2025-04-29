@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from "@/components/ui/button"
 import type { User } from '@supabase/supabase-js'
@@ -18,6 +18,8 @@ export default function Navbar() {
   })
 
   const router = useRouter()
+  const menuRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const getUser = async () => {
@@ -57,6 +59,28 @@ export default function Navbar() {
     setUser(null)
     router.push('/')
   }
+
+  // Detect clicks outside the mobile menu and hamburger button.
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
 
   return (
     <nav className="w-full bg-white border-b px-3 py-1 flex items-center justify-between sticky top-0 z-50 shadow-md">
@@ -106,6 +130,7 @@ export default function Navbar() {
       {/* Hamburger – shown on screens below md */}
       <div className="md:hidden flex items-center">
         <Button
+          ref={buttonRef}
           size="sm"
           variant="ghost"
           onClick={() => setIsOpen(!isOpen)}
@@ -122,7 +147,7 @@ export default function Navbar() {
 
       {/* Mobile Menu – only visible below md */}
       {isOpen && (
-        <div className="md:hidden absolute top-16 right-6 bg-white p-4 shadow-md rounded-md w-38 z-40">
+        <div ref={menuRef} className="md:hidden absolute top-16 right-6 bg-white p-4 shadow-md rounded-md w-38 z-40">
           <div className="flex flex-col gap-2">
             <Link href="/rooms" className="block text-sm hover:underline">
               Browse Rooms

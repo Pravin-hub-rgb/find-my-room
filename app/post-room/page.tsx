@@ -51,6 +51,7 @@ const PostRoomPage = () => {
 
   const bhkTypes = [
     "1 RK",
+    "PG",
     "Studio",
     "1 BHK",
     "2 BHK",
@@ -73,7 +74,7 @@ const PostRoomPage = () => {
 
       if (error || !data?.user) {
         console.warn("User not authenticated:", error?.message);
-        router.push('/auth/login'); // Redirect to login if not logged in
+        router.push('/auth/login?toast=unauthorized-post'); // Redirect to login if not logged in
         return;
       }
 
@@ -87,7 +88,6 @@ const PostRoomPage = () => {
 
   if (loading) return <div>Checking authentication...</div>;
 
-  // Removing unused handleImageChange function
 
   // Handle file changes, check file size
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -230,25 +230,6 @@ const PostRoomPage = () => {
     return null;
   }
 
-  // const fetchLatLng = async (state: string, district: string, locality: string) => {
-  //   const query = locality
-  //     ? `${locality}, ${district}, ${state}, India`
-  //     : `${district}, ${state}, India`;
-
-  //   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-
-  //   try {
-  //     const res = await fetch(url);
-  //     const data = await res.json();
-  //     if (data?.length) {
-  //       const { lat, lon } = data[0];
-  //       return { lat: parseFloat(lat), lng: parseFloat(lon) };
-  //     }
-  //   } catch (err) {
-  //     console.error("Error fetching lat/lng:", err);
-  //   }
-  //   return null;
-  // };
 
   const fetchLatLng = async (state: string, district: string, locality: string, scatter = true) => {
     const baseUrl = "https://nominatim.openstreetmap.org/search?format=json&q=";
@@ -335,12 +316,12 @@ const PostRoomPage = () => {
 
         {/* BHK Type */}
         <div>
-          <label className="block mb-1 font-medium text-gray-700">BHK Type</label>
+          <label className="block mb-1 font-medium text-gray-700">Room Type</label>
           <Select
             onValueChange={(value) => setFormData({ ...formData, bhkType: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select BHK Type" />
+              <SelectValue placeholder="Select Room Type" />
             </SelectTrigger>
             <SelectContent>
               {bhkTypes.map((type) => (

@@ -72,7 +72,7 @@ const RoomCard: FC<RoomCardProps> = ({ room }) => {
         {/* Location */}
         <p className="text-xs text-gray-600 mb-3">
           {room.locality && room.locality.toLowerCase() !== room.district.toLowerCase()
-            ? room.locality + ' '
+            ? room.locality + ', '
             : ''}
           {room.district}, {room.state}
         </p>

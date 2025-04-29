@@ -35,6 +35,14 @@ const LoginComponent = () => {
       newUrl.searchParams.delete("toast");
       window.history.replaceState({}, '', newUrl.toString());
     }
+    if (toastParam === "unauthorized-post" && !toastShownRef.current) {
+      toast.error("Please log in to post a room.");
+      toastShownRef.current = true;
+
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("toast");
+      window.history.replaceState({}, '', newUrl.toString());
+    }
   }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {

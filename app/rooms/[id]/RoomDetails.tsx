@@ -6,7 +6,7 @@ import Image from 'next/image';
 interface Room {
   title?: string;
   description: string;
-  room_type?: string;
+  bhk_type?: string;
   price: number | string;
   locality: string;
   district: string;
@@ -18,12 +18,12 @@ interface Room {
 export default function RoomDetails({ room }: { room: Room }) {
   // Make sure we have an array of strings with no undefined values
   const images: string[] = room.image_urls || (room.image_url ? [room.image_url] : []);
-  
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-2">{room.title}</h1>
       <p className="text-gray-700 mb-4">{room.description}</p>
-      <p><strong>Type:</strong> {room.room_type}</p>
+      <p><strong>Type:</strong> {room.bhk_type}</p>
       <p><strong>Price:</strong> ₹{room.price}</p>
       <p><strong>Location:</strong> {room.locality}, {room.district}, {room.state}</p>
       {images.length > 0 && (

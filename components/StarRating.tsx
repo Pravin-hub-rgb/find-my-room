@@ -11,6 +11,7 @@ interface Review {
 
 const StarRating: React.FC<StarRatingProps> = ({ roomId }) => {
   const [averageRating, setAverageRating] = useState<number | null>(null);
+  const [ratingCount, setRatingCount] = useState<number>(0);
 
   const fetchAverageRating = useCallback(async () => {
     try {
@@ -28,8 +29,10 @@ const StarRating: React.FC<StarRatingProps> = ({ roomId }) => {
         const totalRatings = data.reduce((acc: number, review: Review) => acc + review.rating, 0);
         const average = totalRatings / data.length;
         setAverageRating(average);
+        setRatingCount(data.length);
       } else {
         setAverageRating(null);
+        setRatingCount(0);
       }
     } catch (error) {
       console.error('Error fetching average rating:', error);
@@ -61,7 +64,9 @@ const StarRating: React.FC<StarRatingProps> = ({ roomId }) => {
         {[1, 2, 3, 4, 5].map((pos) => renderStar(pos))}
       </div>
       <span className="ml-2 text-xs text-gray-500">
-        {averageRating !== null ? averageRating.toFixed(1) : 'No ratings'}
+        {averageRating !== null
+          ? `${averageRating.toFixed(1)}${ratingCount > 0 ? ` (${ratingCount})` : ''}`
+          : 'No ratings'}
       </span>
     </div>
   );
