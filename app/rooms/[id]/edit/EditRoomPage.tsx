@@ -649,7 +649,7 @@ export function EditRoomForm({ roomId }: EditPageProps) {
         {formErrors.images && <p className="text-red-600 text-sm mt-1">{formErrors.images}</p>}
 
         {/* Submit Buttons */}
-        <div className="flex space-x-4">
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <Button
             type="submit"
             disabled={isSubmitting}
